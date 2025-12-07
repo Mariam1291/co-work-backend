@@ -1,25 +1,19 @@
+// src/routes/auth.routes.ts
 import { Router } from "express";
-import  admin  from "../config/firebase"; // من ملف firebase.ts
+import { verifyAuth } from "../middlewares/verifyAuth";
 
 const router = Router();
 
-/**
- * GET /auth/me
- * يرجّع بيانات المستخدم من الـ Token
- */
-router.get("/me", async (req: any, res) => {
+// المسار للتأكد من بيانات المستخدم بعد التوثيق
+router.get("/me", verifyAuth, async (req: any, res) => {
   try {
-    const uid = req.userId; // جاي من verifyToken middleware
+    const user = req.user;  // بيانات المستخدم تم إضافتها بواسطة verifyAuth
 
-    const snap = await admin.firestore().collection("users").doc(uid).get();
-    if (!snap.exists) return res.status(404).json({ message: "User not found" });
-
-    return res.json({ user: snap.data() });
-
+    res.json({ user });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-export default router;
+module.exports = router;

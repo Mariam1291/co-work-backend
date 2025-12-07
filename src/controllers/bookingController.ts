@@ -1,32 +1,27 @@
-// src/controllers/booking.controller.ts
 import { Request, Response } from "express";
-import { db } from "../config/firebase";
-import admin from "../config/firebase";
-import { CreateBookingSchema } from "../models/booking.model";
-import { BookingService } from "../services/booking.service";
+import { db } from "../config/firebase";  // تأكد من استيراد db من firebase
+import { BookingService } from "../services/bookingservice"; // استيراد خدمة الحجز
+import { firebaseAdmin as admin } from "../config/firebase";  // استيراد admin بشكل صحيح
+import { AuthenticatedRequest } from "../middlewares/verifyAuth";  // استيراد AuthenticatedRequest
 
-// نعيد تعريف الـ user بشكل نظيف وآمن بدون صدام مع أي types تانية
-export interface AuthenticatedRequest extends Request {
-  user: {
-    uid: string;
-    email?: string | null;
-  };
+// تحويل الوقت إلى تنسيق 24 ساعة
+function convertTo24HourFormat(time12: string): string {
+  const [time, modifier] = time12.split(' ');
+  let [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
+
+  if (modifier === 'PM' && hours !== 12) {
+    hours += 12;  // تحويل إلى مساء
+  } else if (modifier === 'AM' && hours === 12) {
+    hours = 0;    // تحويل إلى منتصف الليل
+  }
+
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
+// دالة لإنشاء حجز
+export const createBooking = async (req: AuthenticatedRequest, res: Response) => {  // استخدام AuthenticatedRequest هنا
   try {
-    // الـ user مضمون إنه موجود بفضل الـ middleware
-    const user = req.user;
-
-    const validation = CreateBookingSchema.safeParse(req.body);
-    if (!validation.success) {
-      return res.status(400).json({
-        message: "بيانات الحجز غير صحيحة",
-        errors: validation.error.flatten().fieldErrors,
-      });
-    }
-
-    const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = validation.data;
+    const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = req.body;
 
     // تحقق من توافر الوقت
     const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
@@ -34,38 +29,26 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
       return res.status(409).json({ message: "هذا الوقت محجوز بالفعل" });
     }
 
-    // رفع صورة الإيداع
+    // رفع صورة الإيداع إذا كانت موجودة
     let screenshotUrl: string | null = null;
     if (depositScreenshot) {
-      screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, user.uid);
+      screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, req.user.uid);
     }
 
-    // جلب بيانات الفرع والغرفة
-    const [roomSnap, branchSnap] = await Promise.all([
-      db.collection("rooms").doc(roomId).get(),
-      db.collection("branches").doc(branchId).get(),
-    ]);
+    // تحويل الوقت إلى 24 ساعة
+    const startTime24 = convertTo24HourFormat(startTime);
+    const endTime24 = convertTo24HourFormat(endTime);
 
-    if (!roomSnap.exists || !branchSnap.exists) {
-      return res.status(404).json({ message: "الغرفة أو الفرع غير موجود" });
-    }
-
-    const room = roomSnap.data()!;
-    const branch = branchSnap.data()!;
-
-    // إنشاء الحجز
+    // إضافة الحجز إلى قاعدة البيانات
     const bookingRef = await db.collection("bookings").add({
-      userId: user.uid,
-      userEmail: user.email || "unknown@email.com",
+      userId: req.user.uid, // يجب أن تكون `user` جزء من `AuthenticatedRequest`
       branchId,
-      branchName: branch.name || "فرع شغف",
       roomId,
-      roomName: room.name || "غرفة",
       date,
-      startTime,
-      endTime,
+      startTime: startTime24, // وقت البداية بتنسيق 24 ساعة
+      endTime: endTime24,     // وقت النهاية بتنسيق 24 ساعة
       totalPrice,
-      depositScreenshotUrl: screenshotUrl,
+      depositScreenshotUrl: screenshotUrl,  // حفظ الرابط في Firestore
       status: "pending",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
@@ -75,32 +58,8 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
       bookingId: bookingRef.id,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("خطأ في إنشاء الحجز:", error);
     return res.status(500).json({ message: error.message || "حدث خطأ غير متوقع" });
-  }
-};
-// في booking.controller.ts أضيفي الدالة دي
-export const getAvailableTimes = async (req: Request, res: Response) => {
-  try {
-    const { roomId, date } = req.query;
-    if (!roomId || !date) return res.status(400).json({ message: "roomId and date required" });
-
-    const snapshot = await db
-      .collection("bookings")
-      .where("roomId", "==", roomId)
-      .where("date", "==", date)
-      .where("status", "in", ["pending", "confirmed"])
-      .get();
-
-    const bookedSlots: { start: string; end: string }[] = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      bookedSlots.push({ start: data.startTime, end: data.endTime });
-    });
-
-    res.json({ bookedSlots });
-  } catch (error) {
-    res.status(500).json({ message: "فشل جلب الأوقات" });
   }
 };

@@ -1,8 +1,8 @@
 // src/routes/users.ts
 import { Router } from "express";
 import { db } from "../config/firebase";
-import admin from "../config/firebase"; // مهم جدًا
-import { verifyAuth } from "../middlewares/auth"; // لو مش موجود هنحلها تحت
+import admin from "../config/firebase"; 
+import { verifyAuth } from "../middlewares/verifyAuth"; 
 import { isAdmin } from "../middlewares/isAdmin";
 
 const router = Router();
@@ -29,7 +29,6 @@ router.get("/:id", verifyAuth, async (req, res) => {
     const userId = req.params.id;
     const authUser = (req as any).user;
 
-    // السماح للمستخدم يشوف بياناته، أو الأدمن يشوف أي حد
     const userRecord = await admin.auth().getUser(authUser.uid);
     if (authUser.uid !== userId && userRecord.customClaims?.admin !== true) {
       return res.status(403).json({ message: "ممنوع: لا تملك صلاحية لرؤية بيانات مستخدم آخر" });
@@ -72,7 +71,7 @@ router.delete("/:id", verifyAuth, isAdmin, async (req, res) => {
     const userId = req.params.id;
 
     await db.collection("users").doc(userId).delete();
-    await admin.auth().deleteUser(userId); // حذف من Auth كمان
+    await admin.auth().deleteUser(userId);
 
     res.json({ message: "تم حذف المستخدم نهائيًا" });
   } catch (error: any) {
@@ -81,4 +80,4 @@ router.delete("/:id", verifyAuth, isAdmin, async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

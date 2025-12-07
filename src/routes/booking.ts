@@ -1,13 +1,11 @@
-// src/routes/booking.ts
+// src/routes/booking.routes.ts
 import { Router } from "express";
 import { createBooking } from "../controllers/bookingController"; 
-import { getAvailableTimes } from "../controllers/bookingController";// ← الصحيح (مش bookingController)
-import { verifyAuth } from "../middlewares/auth";
-           // ← الصحيح
+import { verifyAuth } from "../middlewares/verifyAuth";  // التأكد من المسار الصحيح
 
 const router = Router();
 
 // إنشاء حجز جديد (لليوزر العادي)
 router.post("/create", verifyAuth, createBooking);
-router.get("/available-times", getAvailableTimes);
-export default router;
+
+module.exports = router;

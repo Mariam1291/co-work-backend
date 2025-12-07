@@ -1,27 +1,24 @@
-// controllers/admin.controller.ts
+// src/controllers/admincontroller.ts
 import { Request, Response } from 'express';
-import admin from '../config/firebase';
-
-const db = admin.firestore();
-
+import { db } from '../config/firebase';
+import { firebaseAdmin as admin } from "../config/firebase";
+// تصدير دوال إدارة الأدمن
 export const setAdmin = async (req: Request, res: Response) => {
   try {
     const { uid } = req.body;
 
-    // 1. التأكد إن الـ uid موجود في الطلب
     if (!uid || typeof uid !== 'string' || uid.trim() === '') {
       return res.status(400).json({ message: 'uid is required and must be a valid string' });
     }
 
     const trimmedUid = uid.trim();
 
-    // 2. التأكد إن اليوزر موجود فعلاً في Firebase Authentication
+    // التأكد من وجود المستخدم في Firebase Authentication
     const userRecord = await admin.auth().getUser(trimmedUid);
-    console.log('تم العثور على المستخدم في Auth:', userRecord.email || userRecord.phoneNumber || trimmedUid);
 
-    // 3. تعيين أو تحديث الـ user في Firestore (حتى لو ماكنش موجود قبل كده)
     const userRef = db.collection('users').doc(trimmedUid);
 
+    // تعيين أو تحديث الـ user في Firestore
     await userRef.set(
       {
         user_type: 'admin',
@@ -30,17 +27,15 @@ export const setAdmin = async (req: Request, res: Response) => {
         displayName: userRecord.displayName || null,
         photoURL: userRecord.photoURL || null,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        isAdmin: true, // اختياري لو بتستخدمه في الفرونت
+        isAdmin: true, // تعيين isAdmin في Firestore
       },
-      { merge: true } // مهم جدًا: لو الدوكيومنت موجود → يعدل، لو مش موجود → يعمل create
+      { merge: true }
     );
 
-    // 4. (اختياري لكن موصى بيه جدًا) تعيين Custom Claim عشان تحمي الـ routes من السيرفر
+    // تعيين Custom Claims في Firebase Auth
     await admin.auth().setCustomUserClaims(trimmedUid, {
       admin: true,
     });
-
-    console.log(`تم تحويل المستخدم ${userRecord.email || trimmedUid} إلى أدمن بنجاح ✅`);
 
     return res.status(200).json({
       message: 'Admin privileges granted successfully',
@@ -51,25 +46,12 @@ export const setAdmin = async (req: Request, res: Response) => {
     });
 
   } catch (err: any) {
-    console.error('خطأ في تعيين الأدمن:', err);
-
-    // رسائل واضحة حسب نوع الخطأ
-    if (err.code === 'auth/user-not-found') {
-      return res.status(404).json({ message: 'User not found in Firebase Authentication' });
-    }
-
-    if (err.code === 'auth/invalid-uid') {
-      return res.status(400).json({ message: 'Invalid UID format' });
-    }
-
-    return res.status(500).json({
-      message: 'Internal Server Error',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
-    });
+    console.error('Error setting admin:', err);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
-// 1️⃣ جلب كل الحجوزات الـ pending مع كل البيانات + صورة الإيداع من Cloudinary
+// جلب الحجوزات المعلقة
 export const getPendingBookings = async (req: Request, res: Response) => {
   try {
     const snapshot = await db
@@ -90,19 +72,19 @@ export const getPendingBookings = async (req: Request, res: Response) => {
         startTime: data.startTime,
         endTime: data.endTime,
         totalPrice: data.totalPrice,
-        depositScreenshotUrl: data.depositScreenshotUrl, // رابط Cloudinary
+        depositScreenshotUrl: data.depositScreenshotUrl,
         createdAt: data.createdAt?.toDate?.() || null,
       };
     });
 
     res.status(200).json(bookings);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching pending bookings:", error);
     res.status(500).json({ message: "فشل جلب الحجوزات" });
   }
 };
 
-// 2️⃣ موافقة على الحجز
+// الموافقة على الحجز
 export const approveBooking = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -113,16 +95,16 @@ export const approveBooking = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "تم تأكيد الحجز بنجاح" });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({ message: "فشل تأكيد الحجز" });
   }
 };
 
-// 3️⃣ رفض الحجز
+// رفض الحجز
 export const rejectBooking = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body; // اختياري
+    const { reason } = req.body;
 
     await db.collection("bookings").doc(id).update({
       status: "rejected",
@@ -132,7 +114,7 @@ export const rejectBooking = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "تم رفض الحجز" });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({ message: "فشل رفض الحجز" });
   }
 };

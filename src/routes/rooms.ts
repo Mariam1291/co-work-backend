@@ -1,12 +1,11 @@
+// src/routes/rooms.ts
 import { Router } from "express";
 import admin from "../config/firebase";
 
 const router = Router();
 const db = admin.firestore();
 
-// ====================================
 // 1) ADD ROOM
-// ====================================
 router.post("/add", async (req, res) => {
   try {
     const { id, branch_id, num_of_chair, price_per_hour, is_active } = req.body;
@@ -30,9 +29,7 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// ====================================
 // 2) GET ALL ROOMS OF A BRANCH
-// ====================================
 router.get("/branch/:branch_id", async (req, res) => {
   try {
     const branch_id = req.params.branch_id;
@@ -50,9 +47,7 @@ router.get("/branch/:branch_id", async (req, res) => {
   }
 });
 
-// ====================================
 // 3) GET SINGLE ROOM
-// ====================================
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -68,9 +63,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ====================================
 // 4) UPDATE ROOM
-// ====================================
 router.patch("/update/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -90,9 +83,7 @@ router.patch("/update/:id", async (req, res) => {
   }
 });
 
-// ====================================
 // 5) DELETE ROOM
-// ====================================
 router.delete("/delete/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -105,4 +96,4 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

@@ -1,24 +1,18 @@
-// routes/admin.routes.ts
+// src/routes/admin.routes.ts
 import { Router } from 'express';
-import { setAdmin } from '../controllers/admincontroller';  // استيراد الدالة لتعيين الأدمن
-import { verifyAuth } from "../middlewares/auth";
+import { setAdmin, getPendingBookings, approveBooking, rejectBooking } from '../controllers/admincontroller';  // التأكد من الاستيراد الصحيح
+import { verifyAuth } from "../middlewares/verifyAuth";
 import { isAdmin } from "../middlewares/isAdmin";
+
 const router = Router();
 
-router.post('/set-admin', setAdmin);
+// إضافة أدمن
+router.post('/set-admin', verifyAuth, isAdmin, setAdmin);
 
-import {
-  getPendingBookings,
-  approveBooking,
-  rejectBooking,
-} from "../controllers/admincontroller";
-
-
-
-router.use(verifyAuth, isAdmin); // كل الـ routes تحت دي للأدمن بس
-
+// الحجز المعلق
+router.use(verifyAuth, isAdmin); // التأكد من أن جميع الـ routes التالية فقط للأدمن
 router.get("/pending-bookings", getPendingBookings);
 router.post("/booking/:id/approve", approveBooking);
 router.post("/booking/:id/reject", rejectBooking);
 
-export default router;
+module.exports = router;
