@@ -3,11 +3,17 @@
     "target": "ES2020",
     "module": "CommonJS",
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",   // تعديل هنا لتشمل كل شيء من الجذر
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types", "./src/@types"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/types/**/*.d.ts",
+    "tests/**/*.ts"   // هنا تشمل مجلد الاختبارات
+  ]
 }
