@@ -1,9 +1,7 @@
-// src/routes/notification.ts
 import express, { Request, Response } from "express";
-import Backendless from "backendless";
+import { db } from "../config/firebase"; // تأكد من استيراد db بشكل صحيح
 
 const router = express.Router();
-const Notifications = Backendless.Data.of("notification");
 
 // ==========================================
 // 1. جلب إشعارات المستخدم
@@ -17,29 +15,30 @@ router.get("/my-notifications", async (req: Request, res: Response) => {
   }
 
   try {
-    const builder = Backendless.DataQueryBuilder.create()
-      .setWhereClause(`userId = '${userId}'`)
-      .setSortBy(["createdAt DESC"]);
+    // بناء استعلام Firestore
+    let query = db.collection("notifications").where("userId", "==", userId).orderBy("createdAt", "desc");
 
     if (onlyUnread) {
-      builder.setWhereClause(`userId = '${userId}' AND isRead = false`);
+      query = query.where("isRead", "==", false);
     }
 
-    const notifications = await Notifications.find(builder);
+    const snapshot = await query.get();
+    
+    const notifications = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        text: data.text,
+        type: data.type || "general",
+        relatedId: data.relatedId || null,
+        isRead: data.isRead || false,
+        createdAt: data.createdAt,
+      };
+    });
 
-    // تحويل التواريخ لشكل ISO عادي لو محتاج
-    const formatted = notifications.map((n: any) => ({
-      id: n.objectId,
-      text: n.text,
-      type: n.type || "general",
-      relatedId: n.relatedId || null,
-      isRead: n.isRead || false,
-      createdAt: n.createdAt,
-    }));
-
-    res.json({ notifications: formatted });
+    res.json({ notifications });
   } catch (err) {
-    console.error("getNotifications error:", err);
+    console.error("Error fetching notifications:", err);
     res.status(500).json({ message: "خطأ في جلب الإشعارات" });
   }
 });
@@ -55,12 +54,16 @@ router.post("/mark-as-read", async (req: Request, res: Response) => {
   }
 
   try {
-    await Notifications.save({ objectId: notiId, isRead: true });
+    // تحديث حالة الإشعار
+    await db.collection("notifications").doc(notiId).update({
+      isRead: true,
+    });
+
     res.json({ success: true });
   } catch (err) {
-    console.error("markNotificationAsRead error:", err);
+    console.error("Error marking notification as read:", err);
     res.status(500).json({ message: "فشل تحديث حالة الإشعار" });
   }
 });
 
-module.exports = router; // مهم جدًا
+export default router;

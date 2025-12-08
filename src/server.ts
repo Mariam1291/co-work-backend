@@ -16,6 +16,7 @@ const paymentRoutes = require("./routes/payment").default ?? require("./routes/p
 const roofRoutes = require("./routes/roof").default ?? require("./routes/roof");
 const roomRoutes = require("./routes/rooms").default ?? require("./routes/rooms");
 const userRoutes = require("./routes/users").default ?? require("./routes/users");
+const gamesRoutes = require("./routes/games").default ?? require("./routes/games");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -45,6 +46,7 @@ app.use("/admin", adminRoutes);
 app.use("/branches",branchesRoutes);
 app.use("/notification",notificationRoutes);
 app.use("/userRoutes",userRoutes);
+app.use("/api/games", gamesRoutes);
 
 // === Server Listen (فقط لما تشغل npm run dev) ===
 if (require.main === module) {
