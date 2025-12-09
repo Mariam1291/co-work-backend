@@ -6,7 +6,6 @@ import BackendlessClient from "backendless";
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
-
 // إعداد الوثائق باستخدام swagger-jsdoc
 
 // src/server.ts - في أول الملف
@@ -24,6 +23,7 @@ import gamesRoutes from "./routes/games";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
 const options = {
   swaggerDefinition: {
     openapi: "3.0.0", // النسخة الخاصة بـ OpenAPI
@@ -41,9 +41,7 @@ const options = {
   apis: ["./src/routes/*.ts"], // المسارات التي تحتوي على الـ API
 };
 
-
 const swaggerSpec = swaggerJSDoc(options);
-
 
 // إعداد واجهة Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -51,7 +49,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // تشغيل السيرفر
 app.listen(8080, () => {
   console.log('Server is running on http://localhost:8080');
-  console.log('Swagger docs are available at http://localhost:8080/api-docs');
+  console.log('Swagger docs are available at https://co-work-backend-test.up.railway.app/api-docs');
 });
 
 // Middlewares
@@ -69,7 +67,6 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 // === Routes ===
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/payments", paymentRoutes);
 app.use("/auth", authRoutes);
 app.use("/roof", roofRoutes);
@@ -77,9 +74,9 @@ app.use("/events", eventRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/rooms", roomsRoutes);
 app.use("/admin", adminRoutes);
-app.use("/branches",branchesRoutes);
-app.use("/notification",notificationRoutes);
-app.use("/userRoutes",userRoutes);
+app.use("/branches", branchesRoutes);
+app.use("/notification", notificationRoutes);
+app.use("/userRoutes", userRoutes);
 app.use("/api/games", gamesRoutes);
 
 // === Server Listen (فقط لما تشغل npm run dev) ===
