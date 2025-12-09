@@ -3,8 +3,12 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import BackendlessClient from "backendless";
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
-// استيراد الـ routes بطريقة نظيفة (بدل require)
+
+// إعداد الوثائق باستخدام swagger-jsdoc
+
 // src/server.ts - في أول الملف
 import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
@@ -20,6 +24,34 @@ import gamesRoutes from "./routes/games";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const options = {
+  swaggerDefinition: {
+    openapi: "3.0.0", // النسخة الخاصة بـ OpenAPI
+    info: {
+      title: "Co-Work Backend API", // اسم الـ API
+      version: "1.0.0", // النسخة
+      description: "API documentation for the Co-Work Backend system", // وصف الـ API
+    },
+    servers: [
+      {
+        url: "http://localhost:8080", // يمكن تغييره إلى رابط سيرفرك على الـ Railway في الإنتاج
+      },
+    ],
+  },
+  apis: ["./src/routes/*.ts"], // المسارات التي تحتوي على الـ API
+};
+
+const swaggerSpec = swaggerJSDoc(options);
+
+
+// إعداد واجهة Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// تشغيل السيرفر
+app.listen(8080, () => {
+  console.log('Server is running on http://localhost:8080');
+  console.log('Swagger docs are available at http://localhost:8080/api-docs');
+});
 
 // Middlewares
 app.use(cors());
@@ -36,6 +68,7 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 // === Routes ===
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/payments", paymentRoutes);
 app.use("/auth", authRoutes);
 app.use("/roof", roofRoutes);

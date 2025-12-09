@@ -6,6 +6,29 @@ import { Request, Response } from "express";
 const router = Router();
 
 // جلب كل الألعاب
+/**
+ * @swagger
+ * /games/all:
+ *   get:
+ *     summary: Get all games
+ *     description: Retrieves all the games from the database
+ *     responses:
+ *       200:
+ *         description: A list of games
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ */
 router.get("/all", async (req: Request, res: Response) => {
   try {
     const gamesSnapshot = await db.collection("games").get(); // استرجاع الألعاب من Firestore
@@ -33,6 +56,49 @@ router.get("/all", async (req: Request, res: Response) => {
 });
 
 // جلب لعبة واحدة بالـ ID
+/**
+ * @swagger
+ * /games/{id}:
+ *   get:
+ *     summary: Get game by ID
+ *     description: Returns the game for a specific ID
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: ID of the game to fetch
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Game data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 nameAr:
+ *                   type: string
+ *                 nameEn:
+ *                   type: string
+ *                 descriptionAr:
+ *                   type: string
+ *                 descriptionEn:
+ *                   type: string
+ *                 image:
+ *                   type: object
+ *                   properties:
+ *                     img1:
+ *                       type: string
+ *                     img2:
+ *                       type: string
+ *                 isActive:
+ *                   type: boolean
+ *       404:
+ *         description: Game not found
+ */
 router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {

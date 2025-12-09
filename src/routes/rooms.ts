@@ -1,99 +1,119 @@
-// src/routes/rooms.ts
 import { Router } from "express";
-import admin from "../config/firebase";
+import {
+  getAllRooms,
+  getRoomById,
+  getRoomsByBranch,
+} from "../controllers/roomsController";
 
 const router = Router();
-const db = admin.firestore();
 
-// 1) ADD ROOM
-router.post("/add", async (req, res) => {
-  try {
-    const { id, branch_id, num_of_chair, price_per_hour, is_active } = req.body;
+/**
+ * @swagger
+ * /rooms:
+ *   get:
+ *     summary: Get all rooms
+ *     description: Fetches all rooms from the database.
+ *     responses:
+ *       200:
+ *         description: Successfully fetched all rooms
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   branch_id:
+ *                     type: string
+ *                   num_of_chair:
+ *                     type: number
+ *                   price_per_hour:
+ *                     type: number
+ *                   is_active:
+ *                     type: boolean
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/", getAllRooms); // Route to get all rooms
 
-    if (!id || !branch_id)
-      return res.status(400).json({ message: "id & branch_id are required" });
+/**
+ * @swagger
+ * /rooms/{roomId}:
+ *   get:
+ *     summary: Get a single room by ID
+ *     description: Fetches a single room based on its ID.
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         required: true
+ *         description: The ID of the room to fetch.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the room by ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 branch_id:
+ *                   type: string
+ *                 num_of_chair:
+ *                   type: number
+ *                 price_per_hour:
+ *                   type: number
+ *                 is_active:
+ *                   type: boolean
+ *       404:
+ *         description: Room not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:roomId", getRoomById); // Route to get a room by ID
 
-    const roomData = {
-      id,
-      branch_id,
-      num_of_chair,
-      price_per_hour,
-      is_active: is_active ?? true,
-    };
+/**
+ * @swagger
+ * /rooms/branch/{branchId}:
+ *   get:
+ *     summary: Get all rooms of a branch
+ *     description: Fetches all rooms of a specific branch.
+ *     parameters:
+ *       - in: path
+ *         name: branchId
+ *         required: true
+ *         description: The ID of the branch.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully fetched rooms for the branch
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   branch_id:
+ *                     type: string
+ *                   num_of_chair:
+ *                     type: number
+ *                   price_per_hour:
+ *                     type: number
+ *                   is_active:
+ *                     type: boolean
+ *       404:
+ *         description: Branch not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/branch/:branchId", getRoomsByBranch); // Route to get rooms by branch ID
 
-    await db.collection("rooms").doc(id).set(roomData);
-
-    return res.status(201).json({ message: "Room added", room: roomData });
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
-  }
-});
-
-// 2) GET ALL ROOMS OF A BRANCH
-router.get("/branch/:branch_id", async (req, res) => {
-  try {
-    const branch_id = req.params.branch_id;
-
-    const snap = await db
-      .collection("rooms")
-      .where("branch_id", "==", branch_id)
-      .get();
-
-    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-    return res.status(200).json(data);
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
-  }
-});
-
-// 3) GET SINGLE ROOM
-router.get("/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    const doc = await db.collection("rooms").doc(id).get();
-
-    if (!doc.exists)
-      return res.status(404).json({ message: "Room not found" });
-
-    return res.status(200).json({ id: doc.id, ...doc.data() });
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
-  }
-});
-
-// 4) UPDATE ROOM
-router.patch("/update/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const updates = req.body;
-
-    const ref = db.collection("rooms").doc(id);
-    const snap = await ref.get();
-
-    if (!snap.exists)
-      return res.status(404).json({ message: "Room not found" });
-
-    await ref.update(updates);
-
-    return res.status(200).json({ message: "Room updated" });
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
-  }
-});
-
-// 5) DELETE ROOM
-router.delete("/delete/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    await db.collection("rooms").doc(id).delete();
-
-    return res.status(200).json({ message: "Room deleted" });
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
-  }
-});
-
-export default router;  
+export default router;

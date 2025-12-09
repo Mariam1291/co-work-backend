@@ -3,7 +3,8 @@ import admin from "../config/firebase";
 
 const db = admin.firestore();
 
-const getAllRooms = async (req: Request, res: Response) => {
+// GET all rooms
+export const getAllRooms = async (req: Request, res: Response) => {
   try {
     const snap = await db.collection("rooms").get();
     const rooms = snap.docs.map((doc) => ({
@@ -17,14 +18,10 @@ const getAllRooms = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllRooms };
-
-
 // GET single room by ID
 export const getRoomById = async (req: Request, res: Response) => {
   try {
     const roomId = req.params.roomId;
-
     const doc = await db.collection("rooms").doc(roomId).get();
 
     if (!doc.exists) {
@@ -42,7 +39,6 @@ export const getRoomById = async (req: Request, res: Response) => {
 export const getRoomsByBranch = async (req: Request, res: Response) => {
   try {
     const branchId = req.params.branchId;
-
     const branchDoc = await db.collection("branches").doc(branchId).get();
 
     if (!branchDoc.exists) {
@@ -51,15 +47,15 @@ export const getRoomsByBranch = async (req: Request, res: Response) => {
 
     const branchRooms: string[] = branchDoc.data()?.rooms || [];
 
-    const roomPromises = branchRooms.map(id =>
+    const roomPromises = branchRooms.map((id) =>
       db.collection("rooms").doc(id).get()
     );
 
     const roomDocs = await Promise.all(roomPromises);
 
     const rooms = roomDocs
-      .filter(doc => doc.exists)
-      .map(doc => ({ id: doc.id, ...doc.data() }));
+      .filter((doc) => doc.exists)
+      .map((doc) => ({ id: doc.id, ...doc.data() }));
 
     res.status(200).json(rooms);
   } catch (error) {
