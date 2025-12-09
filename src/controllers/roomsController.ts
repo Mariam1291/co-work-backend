@@ -3,18 +3,22 @@ import admin from "../config/firebase";
 
 const db = admin.firestore();
 
-// GET all rooms
-export const getAllRooms = async (req: Request, res: Response) => {
+const getAllRooms = async (req: Request, res: Response) => {
   try {
     const snap = await db.collection("rooms").get();
-    const rooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
+    const rooms = snap.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     res.status(200).json(rooms);
   } catch (error) {
     console.error("Error fetching rooms:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export { getAllRooms };
+
 
 // GET single room by ID
 export const getRoomById = async (req: Request, res: Response) => {

@@ -6,17 +6,17 @@ import BackendlessClient from "backendless";
 
 // استيراد الـ routes بطريقة نظيفة (بدل require)
 // src/server.ts - في أول الملف
-const adminRoutes = require("./routes/admin").default ?? require("./routes/admin");
-const authRoutes = require("./routes/auth").default ?? require("./routes/auth");
-const bookingRoutes = require("./routes/booking").default ?? require("./routes/booking");
-const branchesRoutes = require("./routes/branches").default ?? require("./routes/branches");
-const eventRoutes   = require("./routes/event").default ?? require("./routes/event");
-const notificationRoutes = require("./routes/notifications").default ?? require("./routes/notifications");
-const paymentRoutes = require("./routes/payment").default ?? require("./routes/payment");
-const roofRoutes = require("./routes/roof").default ?? require("./routes/roof");
-const roomRoutes = require("./routes/rooms").default ?? require("./routes/rooms");
-const userRoutes = require("./routes/users").default ?? require("./routes/users");
-const gamesRoutes = require("./routes/games").default ?? require("./routes/games");
+import adminRoutes from "./routes/admin";
+import authRoutes from "./routes/auth";
+import bookingRoutes from "./routes/booking";
+import branchesRoutes from "./routes/branches";
+import eventRoutes from "./routes/event";
+import notificationRoutes from "./routes/notifications";
+import paymentRoutes from "./routes/payment";
+import roofRoutes from "./routes/roof";
+import roomsRoutes from "./routes/rooms";
+import userRoutes from "./routes/users";
+import gamesRoutes from "./routes/games";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -41,7 +41,7 @@ app.use("/auth", authRoutes);
 app.use("/roof", roofRoutes);
 app.use("/events", eventRoutes);
 app.use("/api/bookings", bookingRoutes);
-app.use("/api/rooms", roomRoutes);
+app.use("/api/rooms", roomsRoutes);
 app.use("/admin", adminRoutes);
 app.use("/branches",branchesRoutes);
 app.use("/notification",notificationRoutes);
