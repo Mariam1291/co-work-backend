@@ -3,12 +3,17 @@ import {
   getAllEvents,
   getEventById,
   getEventsByBranch,
-} from "../controllers/eventController";
+} from "../controllers/eventController"; // استيراد الـ Controller
 
 const router = Router();
 
-router.get("/", getAllEvents);
-router.get("/:eventId", getEventById);
-router.get("/branch/:branchId", getEventsByBranch);
+// GET all events
+router.get("/", getAllEvents); // عرض كل الأحداث
 
-export default router; // تأكد من تصديره هكذا
+// GET event by ID
+router.get("/:eventId", getEventById); // عرض حدث واحد بناءً على الـ ID
+
+// GET events by branch
+router.get("/branch/:branchId", getEventsByBranch); // عرض الأحداث بناءً على الفرع
+
+export default router; // تصدير الـ Routes
