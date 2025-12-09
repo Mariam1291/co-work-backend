@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import admin from "../config/firebase";
-
-const db = admin.firestore();
+import { db } from "../config/firebase";
 
 // GET all events
 export const getAllEvents = async (req: Request, res: Response) => {

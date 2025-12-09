@@ -3,7 +3,7 @@ import {
   getAllEvents,
   getEventById,
   getEventsByBranch,
-} from "../controllers/eventController"; // استيراد الـ Controller
+} from "../controllers/eventController"; // تأكد من استيراد الـ Controller بشكل صحيح
 
 const router = Router();
 
