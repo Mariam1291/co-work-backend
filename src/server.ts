@@ -34,12 +34,13 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:8080", // يمكن تغييره إلى رابط سيرفرك على الـ Railway في الإنتاج
+        url: "https://co-work-backend-test.up.railway.app", // النطاق على Railway
       },
     ],
   },
   apis: ["./src/routes/*.ts"], // المسارات التي تحتوي على الـ API
 };
+
 
 const swaggerSpec = swaggerJSDoc(options);
 
