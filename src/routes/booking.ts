@@ -8,4 +8,4 @@ const router = Router();
 // إنشاء حجز جديد (لليوزر العادي)
 router.post("/create", verifyAuth, createBooking);
 
-module.exports = router;
+export default router; // تأكد من تصديره هكذا

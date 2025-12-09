@@ -6,4 +6,4 @@ const router = Router();
 router.get("/", getBranches);
 router.get("/:id", getBranchById);
 
-module.exports = router;
+export default router; // تأكد من تصديره هكذا

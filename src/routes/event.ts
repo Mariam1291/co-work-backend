@@ -11,4 +11,4 @@ router.get("/", getAllEvents);
 router.get("/:eventId", getEventById);
 router.get("/branch/:branchId", getEventsByBranch);
 
-module.exports = router;
+export default router; // تأكد من تصديره هكذا

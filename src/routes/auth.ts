@@ -16,4 +16,4 @@ router.get("/me", verifyAuth, async (req: any, res) => {
   }
 });
 
-module.exports = router;
+export default router; // تأكد من تصديره هكذا

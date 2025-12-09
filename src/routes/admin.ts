@@ -14,5 +14,5 @@ router.use(verifyAuth, isAdmin); // التأكد من أن جميع الـ route
 router.get("/pending-bookings", getPendingBookings);
 router.post("/booking/:id/approve", approveBooking);
 router.post("/booking/:id/reject", rejectBooking);
+export default router; // تأكد من تصديره هكذا
 
-module.exports = router;
