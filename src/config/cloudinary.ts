@@ -1,11 +1,13 @@
-// src/config/cloudinary.ts
 import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
+
+dotenv.config();  // تحميل المتغيرات من .env
 
 // إعداد Cloudinary
 cloudinary.config({
-  cloud_name: "dibzo6bms",  // استبدلها باسم السحابة الخاص بك
-  api_key: "175424348567478",  // استبدلها بمفتاح الـ API الخاص بك
-  api_secret: "zB0oVotO3zYAaMWAUcvqJ8gUDj4"  // استبدلها بمفتاح السر الخاص بك
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export default cloudinary;

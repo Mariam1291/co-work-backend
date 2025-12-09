@@ -1,15 +1,16 @@
-// src/config/firebase.ts
-import admin from "firebase-admin";
+import admin from 'firebase-admin';
+import dotenv from 'dotenv';
 
-// لو المتغيرات موجودة في .env (الطريقة المفضلة والأضمن)
+dotenv.config();  // تحميل المتغيرات من .env
+
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }),
-    storageBucket: "shagaf-fe682.appspot.com", // غيّرها للـ project id بتاعك + .appspot.com
+    storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
   });
 }
 
