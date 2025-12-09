@@ -44,7 +44,7 @@ const options = {
 const swaggerSpec = swaggerJSDoc(options);
 
 // إعداد واجهة Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/docs',swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // تشغيل السيرفر
 app.listen(8080, () => {
