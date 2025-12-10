@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createBooking } from "../controllers/bookingController"; 
+import { createBooking, deleteBooking } from "../controllers/bookingController";
 import { verifyAuth } from "../middlewares/verifyAuth";  // التأكد من المسار الصحيح
 
 const router = Router();
@@ -64,6 +64,36 @@ const router = Router();
  *       500:
  *         description: Internal Server Error
  */
-router.post("/create", verifyAuth, createBooking);
+router.post("/create", verifyAuth, createBooking);  // مسار إنشاء الحجز
 
-export default router; // تأكد من تصديره هكذا
+/**
+ * @swagger
+ * /api/bookings/{id}:
+ *   delete:
+ *     summary: Delete a booking
+ *     description: Deletes an existing booking by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the booking to delete.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Booking deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.delete("/:id", verifyAuth, deleteBooking);  // مسار حذف الحجز
+
+export default router;

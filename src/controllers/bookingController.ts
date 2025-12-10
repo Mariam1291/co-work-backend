@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { db } from "../config/firebase";  // تأكد من استيراد db من firebase
-import { BookingService } from "../services/bookingservice"; // استيراد خدمة الحجز
-import { firebaseAdmin as admin } from "../config/firebase";  // استيراد admin بشكل صحيح
+import { db } from "../config/firebase";
+import { BookingService } from "../services/bookingservice"; // تأكد من صحة خدمة الحجز
+import { firebaseAdmin as admin } from "../config/firebase";  // تأكد من استيراد admin بشكل صحيح
 import { AuthenticatedRequest } from "../middlewares/verifyAuth";  // استيراد AuthenticatedRequest
 
 // تحويل الوقت إلى تنسيق 24 ساعة
@@ -19,7 +19,7 @@ function convertTo24HourFormat(time12: string): string {
 }
 
 // دالة لإنشاء حجز
-export const createBooking = async (req: AuthenticatedRequest, res: Response) => {  // استخدام AuthenticatedRequest هنا
+export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = req.body;
 
@@ -61,5 +61,24 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
   } catch (error) {
     console.error("خطأ في إنشاء الحجز:", error);
     return res.status(500).json({ message: error.message || "حدث خطأ غير متوقع" });
+  }
+};
+
+// دالة لحذف الحجز
+export const deleteBooking = async (req: Request, res: Response) => {
+  try {
+    const bookingId = req.params.id;
+    const bookingDoc = await db.collection("bookings").doc(bookingId).get();
+
+    if (!bookingDoc.exists) {
+      return res.status(404).json({ message: "الحجز غير موجود" });
+    }
+
+    await db.collection("bookings").doc(bookingId).delete();
+
+    res.status(200).json({ message: "تم حذف الحجز بنجاح" });
+  } catch (error) {
+    console.error("خطأ في حذف الحجز:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء حذف الحجز" });
   }
 };
