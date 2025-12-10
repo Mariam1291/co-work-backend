@@ -36,8 +36,7 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-// للتعامل مع الـ slash وبدونه
-router.get(["/", ""], getAllRooms);
+router.get(["/", ""], getAllRooms); // Route to get all rooms
 
 /**
  * @swagger
