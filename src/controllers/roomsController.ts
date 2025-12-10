@@ -8,22 +8,21 @@ export const getAllRooms = async (req: Request, res: Response) => {
     const snap = await db.collection("rooms").get();
     const rooms = snap.docs.map(doc => ({
       id: doc.id,
-      name: doc.data().name,
-      date: doc.data().date,
-      location: doc.data().location,
-      description: doc.data().description,
-      images: doc.data().images,
-      isActive: doc.data().is_active,
-      createdAt: doc.data().created_at,
-      capacity : doc.data().capacity,
+      nameAr: doc.data()["name-ar"],  // الاسم بالعربي
+      nameEn: doc.data()["name-en"],  // الاسم بالإنجليزي
+      pricePerHour: doc.data().price_per_hour,  // السعر بالساعة
+      isActive: doc.data().is_active,  // حالة الغرفة
+      placeId: doc.data().place_id,  // رقم المكان
+      capacity: doc.data().capacity,  // السعة
     }));
 
-    res.status(200).json(rooms); // إرجاع قائمة كل الأحداث
+    res.status(200).json(rooms); // إرجاع قائمة الغرف
   } catch (error) {
-    console.error("Error fetching events:", error);
+    console.error("Error fetching rooms:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // GET single room by ID
 export const getRoomById = async (req: Request, res: Response) => {

@@ -3,26 +3,26 @@ import { Request, Response } from "express";
 import { db } from "../config/firebase";
 
 // GET all events
-export const getAllRooms = async (req: Request, res: Response) => {
+export const getAllEvents = async (req: Request, res: Response) => {
   try {
-    const snap = await db.collection("rooms").get();
-    const rooms = snap.docs.map(doc => ({
+    const snap = await db.collection("events").get();
+    const events = snap.docs.map(doc => ({
       id: doc.id,
-      nameAr: doc.data()["name-ar"],  // الاسم بالعربي
-      nameEn: doc.data()["name-en"],  // الاسم بالإنجليزي
-      pricePerHour: doc.data().price_per_hour,  // السعر بالساعة
-      isActive: doc.data().is_active,  // حالة الغرفة
-      placeId: doc.data().place_id,  // رقم المكان
-      capacity: doc.data().capacity,  // السعة
+      name: doc.data().name,
+      date: doc.data().date,
+      location: doc.data().location,
+      description: doc.data().description,
+      images: doc.data().images,
+      isActive: doc.data().is_active,
+      createdAt: doc.data().created_at,
     }));
 
-    res.status(200).json(rooms); // إرجاع قائمة الغرف
+    res.status(200).json(events); // إرجاع قائمة كل الأحداث
   } catch (error) {
-    console.error("Error fetching rooms:", error);
+    console.error("Error fetching events:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 // GET event by ID
 export const getEventById = async (req: Request, res: Response) => {
