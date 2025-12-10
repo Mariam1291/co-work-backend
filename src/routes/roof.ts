@@ -38,6 +38,11 @@ const router = Router();
  *                   price_per_hour:
  *                     type: number
  *                     description: The price per hour for using the roof.
+ *                   images:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       description: Image URLs for the roof.
  *       500:
  *         description: Internal server error
  */
@@ -76,6 +81,10 @@ router.get("/", getAllRoof); // Route for fetching all roofs
  *                   type: number
  *                 price_per_hour:
  *                   type: number
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     type: string
  *       404:
  *         description: Roof not found
  *       500:
@@ -118,6 +127,10 @@ router.get("/:roofId", getRoofById); // Route for fetching a roof by ID
  *                     type: number
  *                   price_per_hour:
  *                     type: number
+ *                   images:
+ *                     type: array
+ *                     items:
+ *                       type: string
  *       404:
  *         description: Branch not found
  *       500:

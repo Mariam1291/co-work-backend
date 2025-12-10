@@ -6,9 +6,17 @@ import { db } from "../config/firebase";
 export const getAllRoof = async (req: Request, res: Response) => {
   try {
     const snap = await db.collection("roof").get();
-    const roof = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const roof = snap.docs.map(doc => ({
+      id: doc.id,  // إضافة الـ ID
+      name: doc.data().name,
+      description: doc.data().description,
+      isActive: doc.data().is_active,
+      numOfChairs: doc.data().num_of_chair,
+      pricePerHour: doc.data().price_per_hour,
+      images: doc.data().images || [],  // إضافة الصور
+    }));
 
-    res.status(200).json(roof); // إرجاع قائمة كل الأسطح
+    res.status(200).json(roof); // إرجاع قائمة الأسطح
   } catch (error) {
     console.error("Error fetching roof:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -18,14 +26,17 @@ export const getAllRoof = async (req: Request, res: Response) => {
 // GET single roof by ID
 export const getRoofById = async (req: Request, res: Response) => {
   try {
-    const roofId = req.params.roofId;
+    const roofId = req.params.roofId; // الحصول على الـ roofId من الـ request params
     const doc = await db.collection("roof").doc(roofId).get();
 
     if (!doc.exists) {
       return res.status(404).json({ message: "Roof not found" });
     }
 
-    res.status(200).json({ id: doc.id, ...doc.data() }); // إرجاع بيانات السطح بناءً على الـ ID
+    res.status(200).json({
+      id: doc.id, // إرجاع الـ ID
+      ...doc.data(), // إرجاع بيانات السطح
+    });
   } catch (error) {
     console.error("Error fetching roof:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -35,7 +46,7 @@ export const getRoofById = async (req: Request, res: Response) => {
 // GET roof of a specific branch
 export const getRoofByBranch = async (req: Request, res: Response) => {
   try {
-    const branchId = req.params.branchId;
+    const branchId = req.params.branchId; // الحصول على الـ branchId من الـ request params
     const branchDoc = await db.collection("branches").doc(branchId).get();
 
     if (!branchDoc.exists) {
@@ -52,7 +63,10 @@ export const getRoofByBranch = async (req: Request, res: Response) => {
 
     const roof = roofDocs
       .filter((doc) => doc.exists)
-      .map((doc) => ({ id: doc.id, ...doc.data() }));
+      .map((doc) => ({
+        id: doc.id,  // إضافة الـ ID
+        ...doc.data(),  // إرجاع بيانات السطح
+      }));
 
     res.status(200).json(roof); // إرجاع الأسطح الخاصة بالفرع
   } catch (error) {
