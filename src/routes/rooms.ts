@@ -1,4 +1,3 @@
-// src/routes/rooms.routes.ts
 import { Router } from "express";
 import { getAllRooms, getRoomById, getRoomsByBranch } from "../controllers/roomsController";
 
@@ -55,25 +54,6 @@ router.get("/", getAllRooms); // Route to get all rooms
  *     responses:
  *       200:
  *         description: Successfully fetched the room by ID
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 branch_id:
- *                   type: string
- *                 price_per_hour:
- *                   type: number
- *                 is_active:
- *                   type: boolean
- *                 name-ar:
- *                   type: string
- *                 name-en:
- *                   type: string
- *                 place_id:
- *                   type: number
  *       404:
  *         description: Room not found
  *       500:
@@ -97,27 +77,6 @@ router.get("/:roomId", getRoomById); // Route to get a room by ID
  *     responses:
  *       200:
  *         description: Successfully fetched rooms for the branch
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   branch_id:
- *                     type: string
- *                   price_per_hour:
- *                     type: number
- *                   is_active:
- *                     type: boolean
- *                   name-ar:
- *                     type: string
- *                   name-en:
- *                     type: string
- *                   place_id:
- *                     type: number
  *       404:
  *         description: Branch not found
  *       500:

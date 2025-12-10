@@ -1,10 +1,5 @@
-// src/routes/gamesRoutes.ts
 import { Router } from "express";
-import {
-  getAllGames,
-  getGameById,
-  createGame
-} from "../controllers/gamecontroller"; // التأكد من استيراد الـ Controller بشكل صحيح
+import { getAllGames, getGameById, createGame } from "../controllers/gamecontroller";
 
 const router = Router();
 
@@ -49,30 +44,6 @@ router.get("/all", getAllGames); // Route to get all games
  *     responses:
  *       200:
  *         description: Game data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 nameAr:
- *                   type: string
- *                 nameEn:
- *                   type: string
- *                 descriptionAr:
- *                   type: string
- *                 descriptionEn:
- *                   type: string
- *                 image:
- *                   type: object
- *                   properties:
- *                     img1:
- *                       type: string
- *                     img2:
- *                       type: string
- *                 isActive:
- *                   type: boolean
  *       404:
  *         description: Game not found
  */
@@ -83,8 +54,7 @@ router.get("/:id", getGameById); // Route to get a game by ID
  * /games:
  *   post:
  *     summary: Create a new game
- *     description: Add a new game to the database along with images.
- *     tags: [Games]
+ *     description: Allows creating a new game and uploading related images
  *     requestBody:
  *       required: true
  *       content:
@@ -94,24 +64,20 @@ router.get("/:id", getGameById); // Route to get a game by ID
  *             properties:
  *               nameAr:
  *                 type: string
- *                 description: Arabic name of the game
  *               nameEn:
  *                 type: string
- *                 description: English name of the game
  *               descriptionAr:
  *                 type: string
- *                 description: Arabic description of the game
  *               descriptionEn:
  *                 type: string
- *                 description: English description of the game
  *               imageFiles:
  *                 type: array
  *                 items:
  *                   type: string
- *                   description: Base64 image files for the game (image upload via Cloudinary)
+ *                   format: binary
  *     responses:
  *       201:
- *         description: Successfully created a new game
+ *         description: Successfully created the game
  *         content:
  *           application/json:
  *             schema:
@@ -121,9 +87,7 @@ router.get("/:id", getGameById); // Route to get a game by ID
  *                   type: string
  *                 id:
  *                   type: string
- *       500:
- *         description: Internal server error
  */
 router.post("/", createGame); // Route to create a new game
 
-export default router; // تصدير الـ Routes
+export default router;
