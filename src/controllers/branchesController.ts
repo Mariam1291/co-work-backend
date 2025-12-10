@@ -4,29 +4,18 @@ import admin from "../config/firebase";
 const db = admin.firestore();
 
 // جلب كل الفروع
-export const getBranches = async (req: Request, res: Response) => {
+// GET branches
+export const getAllBranches = async (req: Request, res: Response) => {
   try {
     const branchesSnap = await db.collection("branches").get();
-    const branches = branchesSnap.docs.map(doc => ({
+    const branches = branchesSnap.docs.map((doc) => ({
       id: doc.id,
-      nameAr: doc.data().nameAr,
-      nameEn: doc.data().nameEn,
-      addressAr: doc.data().addressAr,
-      addressEn: doc.data().addressEn,
-      cityAr: doc.data().cityAr,
-      cityEn: doc.data().cityEn,
-      games: doc.data().games,
-      images: doc.data().images,
-      isActive: doc.data().isActive,
-      roof: doc.data().roof,
-      rooms: doc.data().rooms,
-      phoneNumber: doc.data().phoneNumber,
+      branchName: doc.data().name || "No Name",  // تأكد من استخدام الحقل الصحيح
     }));
-
-    res.status(200).json(branches); // إرجاع الفروع
+    res.status(200).json(branches);
   } catch (error) {
     console.error("Error fetching branches:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Error fetching branches" });
   }
 };
 

@@ -1,6 +1,7 @@
 // src/middlewares/verifyAuth.ts
-import { Request, Response, NextFunction } from "express";  // تأكد من استيراد Response و NextFunction
-import admin from "../config/firebase";
+import { Request, Response, NextFunction } from "express";
+import admin from "../config/firebase"; // تأكد من المسار الصحيح
+
 // تعريف واجهة لطلب مع إضافة `user`
 export interface AuthenticatedRequest extends Request {
   user: {
@@ -21,11 +22,14 @@ export const verifyAuth = async (req: AuthenticatedRequest, res: Response, next:
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
+
+    // إضافة بيانات الـ user إلى الـ request object
     req.user = {
       uid: decodedToken.uid,
       email: decodedToken.email || null,
-      isAdmin: decodedToken.admin || false,  // التأكد من أنك تقوم بإعداد الـ admin في التوكن
+      isAdmin: decodedToken.admin || false,  // تأكد من أنك تقوم بإعداد الـ admin في التوكن
     };
+
     return next();
   } catch (error) {
     console.error("خطأ في التحقق من التوكن:", error);
