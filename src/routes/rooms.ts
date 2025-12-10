@@ -38,6 +38,7 @@ const router = Router();
  */
 router.get("/", getAllRooms); // Route to get all rooms
 
+
 /**
  * @swagger
  * /rooms/{roomId}:
