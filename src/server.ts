@@ -50,7 +50,7 @@ app.use('/api-docs', swaggerUi.serve ,swaggerUi.setup(swaggerSpec));
 // تشغيل السيرفر
 app.listen(8080, () => {
   console.log('Server is running on http://localhost:8080');
-  console.log('Swagger docs are available at https://co-work-backend-test.up.railway.app/api-docs');
+  console.log('Swagger docs are available at http://localhost:8080/api-docs');
 });
 
 // Middlewares
