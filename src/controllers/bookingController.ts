@@ -17,6 +17,31 @@ function convertTo24HourFormat(time12: string): string {
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
+// src/controllers/bookingController.ts
+
+// دالة للتحقق من التوافر
+export const checkRoomAvailability = async (req: Request, res: Response) => {
+  try {
+    const { roomId, date, startTime, endTime } = req.body;
+
+    // تحويل الوقت إلى 24 ساعة
+    const startTime24 = convertTo24HourFormat(startTime);
+    const endTime24 = convertTo24HourFormat(endTime);
+
+    // تحقق من التوافر
+    const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
+    if (isAvailable) {
+      return res.status(200).json({ message: "الغرفة متاحة", isAvailable: true });
+    } else {
+      return res.status(409).json({ message: "الغرفة غير متاحة في هذا الوقت", isAvailable: false });
+    }
+
+  } catch (error) {
+    console.error("Error checking room availability:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء التحقق من التوافر" });
+  }
+};
+
 
 // دالة لإنشاء حجز
 export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
