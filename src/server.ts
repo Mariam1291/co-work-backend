@@ -17,6 +17,7 @@ import userRoutes from "./routes/users";
 import gamesRoutes from "./routes/games";
 
 const app = express();
+app.set('strict routing', false);
 const PORT = process.env.PORT || 8080;
 
 const options = {
