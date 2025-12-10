@@ -9,6 +9,7 @@ const router = Router();
  *   get:
  *     summary: Get all branches
  *     description: Fetches all branches from the database.
+ *     tags: [Branches]
  *     responses:
  *       200:
  *         description: Successfully fetched all branches
@@ -21,9 +22,37 @@ const router = Router();
  *                 properties:
  *                   id:
  *                     type: string
- *                   name:
+ *                   nameAr:
  *                     type: string
- *                   location:
+ *                   nameEn:
+ *                     type: string
+ *                   addressAr:
+ *                     type: string
+ *                   addressEn:
+ *                     type: string
+ *                   cityAr:
+ *                     type: string
+ *                   cityEn:
+ *                     type: string
+ *                   games:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   images:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   isActive:
+ *                     type: boolean
+ *                   roof:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   rooms:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   phoneNumber:
  *                     type: string
  *       500:
  *         description: Internal server error
@@ -53,9 +82,37 @@ router.get("/", getBranches); // Route to get all branches
  *               properties:
  *                 id:
  *                   type: string
- *                 name:
+ *                 nameAr:
  *                   type: string
- *                 location:
+ *                 nameEn:
+ *                   type: string
+ *                 addressAr:
+ *                   type: string
+ *                 addressEn:
+ *                   type: string
+ *                 cityAr:
+ *                   type: string
+ *                 cityEn:
+ *                   type: string
+ *                 games:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 isActive:
+ *                   type: boolean
+ *                 roof:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 rooms:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 phoneNumber:
  *                   type: string
  *       404:
  *         description: Branch not found

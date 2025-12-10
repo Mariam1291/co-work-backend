@@ -1,7 +1,8 @@
+// src/routes/roof.routes.ts
 import { Router } from "express";
 import { getAllRoof, getRoofById, getRoofByBranch } from "../controllers/roofController";
 
-const router = Router(); // تأكد من أن `router` تم تعريفه باستخدام `Router()`
+const router = Router();
 
 /**
  * @swagger
@@ -28,16 +29,17 @@ const router = Router(); // تأكد من أن `router` تم تعريفه باس
  *                   description:
  *                     type: string
  *                     description: Description of the roof.
+ *                   is_active:
+ *                     type: boolean
+ *                     description: If the roof is active or not.
+ *                   num_of_chair:
+ *                     type: number
+ *                     description: Number of chairs in the roof.
+ *                   price_per_hour:
+ *                     type: number
+ *                     description: The price per hour for using the roof.
  *       500:
  *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Internal Server Error"
  */
 router.get("/", getAllRoof); // Route for fetching all roofs
 
@@ -68,26 +70,16 @@ router.get("/", getAllRoof); // Route for fetching all roofs
  *                   type: string
  *                 description:
  *                   type: string
+ *                 is_active:
+ *                   type: boolean
+ *                 num_of_chair:
+ *                   type: number
+ *                 price_per_hour:
+ *                   type: number
  *       404:
  *         description: Roof not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Roof not found"
  *       500:
  *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Internal Server Error"
  */
 router.get("/:roofId", getRoofById); // Route for fetching a roof by ID
 
@@ -120,26 +112,16 @@ router.get("/:roofId", getRoofById); // Route for fetching a roof by ID
  *                     type: string
  *                   description:
  *                     type: string
+ *                   is_active:
+ *                     type: boolean
+ *                   num_of_chair:
+ *                     type: number
+ *                   price_per_hour:
+ *                     type: number
  *       404:
  *         description: Branch not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Branch not found"
  *       500:
  *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Internal Server Error"
  */
 router.get("/branch/:branchId", getRoofByBranch); // Route for fetching roofs by branch ID
 

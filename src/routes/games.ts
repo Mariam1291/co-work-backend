@@ -1,11 +1,13 @@
+// src/routes/gamesRoutes.ts
 import { Router } from "express";
-import { db } from "../config/firebase";  // تأكد من استيراد db بشكل صحيح
-import cloudinary from "../config/cloudinary"; // تأكد من استيراد Cloudinary بشكل صحيح
-import { Request, Response } from "express";
+import {
+  getAllGames,
+  getGameById,
+  createGame
+} from "../controllers/gamecontroller"; // التأكد من استيراد الـ Controller بشكل صحيح
 
 const router = Router();
 
-// جلب كل الألعاب
 /**
  * @swagger
  * /games/all:
@@ -29,33 +31,8 @@ const router = Router();
  *                   description:
  *                     type: string
  */
-router.get("/all", async (req: Request, res: Response) => {
-  try {
-    const gamesSnapshot = await db.collection("games").get(); // استرجاع الألعاب من Firestore
-    const games = gamesSnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        nameAr: data["name-ar"] || data.nameAr || data.name || "",
-        nameEn: data["name-en"] || data.nameEn || data.name || "",
-        descriptionAr: data["description-ar"] || data.descriptionAr || "",
-        descriptionEn: data["description-en"] || data.descriptionEn || "",
-        image: {
-          img1: data.image.img1 || "",
-          img2: data.image.img2 || "",
-        },
-        isActive: data.is_active ?? data.isActive ?? true,
-      };
-    });
+router.get("/all", getAllGames); // Route to get all games
 
-    res.json(games);  // إرسال البيانات إلى الـ Frontend
-  } catch (error) {
-    console.error("❌ Error fetching all games:", error);
-    res.status(500).json({ message: "حدث خطأ في جلب الألعاب", error: error.message });
-  }
-});
-
-// جلب لعبة واحدة بالـ ID
 /**
  * @swagger
  * /games/{id}:
@@ -99,66 +76,54 @@ router.get("/all", async (req: Request, res: Response) => {
  *       404:
  *         description: Game not found
  */
-router.get("/:id", async (req: Request, res: Response) => {
-  const { id } = req.params;
-  try {
-    const gameDoc = await db.collection("games").doc(id).get();
+router.get("/:id", getGameById); // Route to get a game by ID
 
-    if (!gameDoc.exists) {
-      return res.status(404).json({ message: "اللعبة غير موجودة" });
-    }
+/**
+ * @swagger
+ * /games:
+ *   post:
+ *     summary: Create a new game
+ *     description: Add a new game to the database along with images.
+ *     tags: [Games]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nameAr:
+ *                 type: string
+ *                 description: Arabic name of the game
+ *               nameEn:
+ *                 type: string
+ *                 description: English name of the game
+ *               descriptionAr:
+ *                 type: string
+ *                 description: Arabic description of the game
+ *               descriptionEn:
+ *                 type: string
+ *                 description: English description of the game
+ *               imageFiles:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   description: Base64 image files for the game (image upload via Cloudinary)
+ *     responses:
+ *       201:
+ *         description: Successfully created a new game
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 id:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/", createGame); // Route to create a new game
 
-    const data = gameDoc.data()!;
-    const game = {
-      id: gameDoc.id,
-      nameAr: data["name-ar"] || data.nameAr || data.name || "",
-      nameEn: data["name-en"] || data.nameEn || data.name || "",
-      descriptionAr: data["description-ar"] || data.descriptionAr || "",
-      descriptionEn: data["description-en"] || data.descriptionEn || "",
-      image: {
-        img1: data.image.img1 || "",
-        img2: data.image.img2 || "",
-      },
-      isActive: data.is_active ?? data.isActive ?? true,
-    };
-
-    res.json(game);  // إرسال البيانات الخاصة باللعبة إلى الـ Frontend
-  } catch (error) {
-    console.error(`❌ Error fetching game ${id}:`, error);
-    res.status(500).json({ message: "حدث خطأ في جلب اللعبة", error: error.message });
-  }
-});
-
-// إضافة لعبة جديدة مع رفع الصور إلى Cloudinary
-router.post("/", async (req: Request, res: Response) => {
-  const { nameAr, nameEn, descriptionAr, descriptionEn, imageFiles } = req.body;
-
-  try {
-    const uploadedImages = await Promise.all(
-      imageFiles.map(async (file: any) => {
-        const result = await cloudinary.uploader.upload(file.path);
-        return result.secure_url;
-      })
-    );
-
-    const newGame = {
-      nameAr,
-      nameEn,
-      descriptionAr,
-      descriptionEn,
-      image: {
-        img1: uploadedImages[0],  // أول صورة
-        img2: uploadedImages[1],  // ثاني صورة
-      },
-      is_active: true,
-    };
-
-    const gameRef = await db.collection("games").add(newGame);
-    res.status(201).json({ message: "Game created successfully", id: gameRef.id });
-  } catch (error) {
-    console.error("❌ Error creating game:", error);
-    res.status(500).json({ message: "حدث خطأ في إضافة اللعبة", error: error.message });
-  }
-});
-
-export default router;
+export default router; // تصدير الـ Routes

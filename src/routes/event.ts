@@ -1,19 +1,17 @@
+// src/routes/event.routes.ts
 import { Router } from "express";
-import {
-  getAllEvents,
-  getEventById,
-  getEventsByBranch,
-} from "../controllers/eventController"; // تأكد من استيراد الـ Controller بشكل صحيح
+import { getAllEvents, getEventById, getEventsByBranch } from "../controllers/eventController"; 
 
 const router = Router();
 
-// GET all events
 /**
  * @swagger
  * /events:
  *   get:
  *     summary: Get all events
  *     description: Returns a list of all events
+ *     tags:
+ *       - Events
  *     responses:
  *       200:
  *         description: List of events
@@ -32,10 +30,22 @@ const router = Router();
  *                     type: string
  *                   location:
  *                     type: string
+ *                   description:
+ *                     type: string
+ *                   images:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   isActive:
+ *                     type: boolean
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       500:
+ *         description: Internal server error
  */
-router.get("/", getAllEvents); // عرض كل الأحداث
+router.get("/", getAllEvents); // Route to get all events
 
-// GET event by ID
 /**
  * @swagger
  * /events/{eventId}:
@@ -65,12 +75,24 @@ router.get("/", getAllEvents); // عرض كل الأحداث
  *                   type: string
  *                 location:
  *                   type: string
+ *                 description:
+ *                   type: string
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 isActive:
+ *                   type: boolean
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
  *       404:
  *         description: Event not found
+ *       500:
+ *         description: Internal server error
  */
-router.get("/:eventId", getEventById); // عرض حدث واحد بناءً على الـ ID
+router.get("/:eventId", getEventById); // Route to get a single event by ID
 
-// GET events by branch
 /**
  * @swagger
  * /events/branch/{branchId}:
@@ -102,9 +124,22 @@ router.get("/:eventId", getEventById); // عرض حدث واحد بناءً عل
  *                     type: string
  *                   location:
  *                     type: string
+ *                   description:
+ *                     type: string
+ *                   images:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   isActive:
+ *                     type: boolean
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
  *       404:
  *         description: Branch not found or no events for the branch
+ *       500:
+ *         description: Internal server error
  */
-router.get("/branch/:branchId", getEventsByBranch); // عرض الأحداث بناءً على الفرع
+router.get("/branch/:branchId", getEventsByBranch); // Route to get events by branch ID
 
-export default router; // تصدير الـ Routes
+export default router; // Export routes

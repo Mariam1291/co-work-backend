@@ -1,8 +1,7 @@
 import { Router } from "express";
-import Backendless from "backendless";
+import { uploadPaymentProof } from "../controllers/paymentcontroller";  // تأكد من استيراد الكنترولر بشكل صحيح
 
 const router = Router();
-const PaymentProofs = Backendless.Data.of("payment_proofs");
 
 /**
  * @swagger
@@ -75,42 +74,6 @@ const PaymentProofs = Backendless.Data.of("payment_proofs");
  *                   type: string
  *                   example: "خطأ في السيرفر الداخلي"
  */
-router.post("/upload-proof", async (req, res) => {
-  const { user_id, booking_ids, method, payer_phone, amount, screenshot_url } = req.body || {};
+router.post("/upload-proof", uploadPaymentProof);  // مسار لرفع إثبات الدفع
 
-  if (!user_id || !Array.isArray(booking_ids) || booking_ids.length === 0 ||
-      !method || !payer_phone || !amount || !screenshot_url) {
-    return res.status(400).json({
-      message: "user_id, booking_ids, method, payer_phone, amount, screenshot_url are required"
-    });
-  }
-
-  try {
-    const proof = {
-      objectId: "123",  // Example objectId
-      user_id,
-      booking_ids,
-      method,
-      payer_phone,
-      amount,
-      screenshot_url,
-      status: "pending",
-      created_at: new Date().toISOString(),
-      reviewed_by: null,
-      reviewed_at: null
-    };
-
-    await PaymentProofs.save(proof);
-
-    res.status(200).json({
-      success: true,
-      proof_id: proof.objectId,
-      status: "pending"
-    });
-  } catch (err) {
-    console.error("uploadPaymentProof error:", err);
-    res.status(500).json({ message: "خطأ في السيرفر الداخلي" });
-  }
-});
-
-export default router;
+export default router;  // تصدير المسارات

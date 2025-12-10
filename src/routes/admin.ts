@@ -17,10 +17,10 @@ const router = Router();
  * /api/admin/set-admin:
  *   post:
  *     summary: Set a user as admin
- *     description: Grant admin privileges to a user.
+ *     description: Grants admin privileges to a user.
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: [] 
+ *       - bearerAuth: []  # أضفنا التوثيق هنا
  *     requestBody:
  *       required: true
  *       content:
@@ -30,10 +30,10 @@ const router = Router();
  *             properties:
  *               uid:
  *                 type: string
- *                 description: The UID of the user to be granted admin privileges.
+ *                 description: The UID of the user to be made an admin
  *     responses:
  *       200:
- *         description: Admin privileges granted successfully
+ *         description: Admin privileges successfully granted
  *         content:
  *           application/json:
  *             schema:
@@ -152,4 +152,3 @@ router.post("/booking/:id/approve", approveBooking);
 router.post("/booking/:id/reject", rejectBooking);
 
 export default router; // تأكد من تصديره هكذا
-

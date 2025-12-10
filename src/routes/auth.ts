@@ -4,7 +4,6 @@ import { verifyAuth } from "../middlewares/verifyAuth";
 
 const router = Router();
 
-// المسار للتأكد من بيانات المستخدم بعد التوثيق
 /**
  * @swagger
  * /api/auth/me:

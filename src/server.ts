@@ -1,15 +1,9 @@
-// src/server.ts
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import BackendlessClient from "backendless";
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import path from 'path';
-
-// إعداد الوثائق باستخدام swagger-jsdoc
-
-// src/server.ts - في أول الملف
 import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
 import bookingRoutes from "./routes/booking";
@@ -45,9 +39,8 @@ const options = {
 const swaggerSpec = swaggerJSDoc(options);
 
 // إعداد واجهة Swagger UI
-app.use('/api-docs', swaggerUi.serve ,swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// تشغيل السيرفر
 app.listen(8080, () => {
   console.log('Server is running on http://localhost:8080');
   console.log('Swagger docs are available at http://localhost:8080/api-docs');
@@ -58,7 +51,7 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// === Backendless Init (مرة واحدة بس ومش في التيستات) ===
+// === Backendless Init ===
 if (process.env.NODE_ENV !== "test") {
   BackendlessClient.initApp(
     "D17B3F2D-1CE5-431E-ADA5-F0D79519F058",
@@ -68,6 +61,7 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 // === Routes ===
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/payments", paymentRoutes);
 app.use("/auth", authRoutes);
 app.use("/roof", roofRoutes);
@@ -80,12 +74,11 @@ app.use("/notification", notificationRoutes);
 app.use("/userRoutes", userRoutes);
 app.use("/api/games", gamesRoutes);
 
-// === Server Listen (فقط لما تشغل npm run dev) ===
+// === Server Listen ===
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
 
-// === Export للتيستات ===
 export default app;

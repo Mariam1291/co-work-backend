@@ -1,9 +1,6 @@
+// src/routes/rooms.routes.ts
 import { Router } from "express";
-import {
-  getAllRooms,
-  getRoomById,
-  getRoomsByBranch,
-} from "../controllers/roomsController";
+import { getAllRooms, getRoomById, getRoomsByBranch } from "../controllers/roomsController";
 
 const router = Router();
 
@@ -27,12 +24,16 @@ const router = Router();
  *                     type: string
  *                   branch_id:
  *                     type: string
- *                   num_of_chair:
- *                     type: number
  *                   price_per_hour:
  *                     type: number
  *                   is_active:
  *                     type: boolean
+ *                   name-ar:
+ *                     type: string
+ *                   name-en:
+ *                     type: string
+ *                   place_id:
+ *                     type: number
  *       500:
  *         description: Internal server error
  */
@@ -63,12 +64,16 @@ router.get("/", getAllRooms); // Route to get all rooms
  *                   type: string
  *                 branch_id:
  *                   type: string
- *                 num_of_chair:
- *                   type: number
  *                 price_per_hour:
  *                   type: number
  *                 is_active:
  *                   type: boolean
+ *                 name-ar:
+ *                   type: string
+ *                 name-en:
+ *                   type: string
+ *                 place_id:
+ *                   type: number
  *       404:
  *         description: Room not found
  *       500:
@@ -80,7 +85,7 @@ router.get("/:roomId", getRoomById); // Route to get a room by ID
  * @swagger
  * /rooms/branch/{branchId}:
  *   get:
- *     summary: Get all rooms of a branch
+ *     summary: Get all rooms of a specific branch
  *     description: Fetches all rooms of a specific branch.
  *     parameters:
  *       - in: path
@@ -103,12 +108,16 @@ router.get("/:roomId", getRoomById); // Route to get a room by ID
  *                     type: string
  *                   branch_id:
  *                     type: string
- *                   num_of_chair:
- *                     type: number
  *                   price_per_hour:
  *                     type: number
  *                   is_active:
  *                     type: boolean
+ *                   name-ar:
+ *                     type: string
+ *                   name-en:
+ *                     type: string
+ *                   place_id:
+ *                     type: number
  *       404:
  *         description: Branch not found
  *       500:
