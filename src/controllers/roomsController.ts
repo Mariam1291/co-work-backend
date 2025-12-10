@@ -6,13 +6,21 @@ import { db } from "../config/firebase";
 export const getAllRooms = async (req: Request, res: Response) => {
   try {
     const snap = await db.collection("rooms").get();
-    const rooms = snap.docs.map((doc) => ({
+    const rooms = snap.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
+      name: doc.data().name,
+      date: doc.data().date,
+      location: doc.data().location,
+      description: doc.data().description,
+      images: doc.data().images,
+      isActive: doc.data().is_active,
+      createdAt: doc.data().created_at,
+      capacity : doc.data().capacity,
     }));
-    res.status(200).json(rooms); // إرجاع قائمة كل الغرف
+
+    res.status(200).json(rooms); // إرجاع قائمة كل الأحداث
   } catch (error) {
-    console.error("Error fetching rooms:", error);
+    console.error("Error fetching events:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
