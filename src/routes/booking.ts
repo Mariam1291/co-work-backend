@@ -1,6 +1,7 @@
-// src/routes/bookingRoutes.ts
+// src/routes/bookingroutes.ts
 import { Router } from "express";
-import { createBooking, deleteBooking, updateBookingStatus, checkRoomAvailability } from "../controllers/bookingController";
+import { createBooking, deleteBooking } from "../controllers/bookingController";
+import { verifyAuth } from "../middlewares/verifyAuth";
 
 const router = Router();
 
@@ -9,53 +10,91 @@ const router = Router();
  * /api/bookings/create:
  *   post:
  *     summary: Create a new booking
- *     description: Creates a new booking for a room after validating availability
+ *     description: Endpoint to create a new booking for a user with available time slot validation.
+ *     tags:
+ *       - Bookings
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               roomId:
+ *                 type: string
+ *                 description: ID of the room to book
+ *               branchId:
+ *                 type: string
+ *                 description: ID of the branch where the room is located
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The date for booking (YYYY-MM-DD)
+ *               startTime:
+ *                 type: string
+ *                 format: time
+ *                 description: The start time of the booking (12-hour format, e.g., "10:00 AM")
+ *               endTime:
+ *                 type: string
+ *                 format: time
+ *                 description: The end time of the booking (12-hour format, e.g., "12:00 PM")
+ *               totalPrice:
+ *                 type: number
+ *                 description: The total price for the booking
+ *               depositScreenshot:
+ *                 type: string
+ *                 description: Base64 encoded image for the deposit screenshot
  *     responses:
- *       200:
+ *       201:
  *         description: Booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 bookingId:
+ *                   type: string
  *       400:
- *         description: Invalid request
+ *         description: Bad request (Missing required fields)
+ *       409:
+ *         description: Conflict (The selected time slot is already booked)
+ *       500:
+ *         description: Internal Server Error
  */
-router.post("/create", createBooking);
+router.post("/create", verifyAuth, createBooking);  // Endpoint for creating a booking
 
 /**
  * @swagger
  * /api/bookings/{id}:
  *   delete:
  *     summary: Delete a booking
- *     description: Deletes a booking based on the provided ID
+ *     description: Deletes an existing booking by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the booking to delete.
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Booking deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
  *       404:
  *         description: Booking not found
+ *       500:
+ *         description: Internal Server Error
  */
-router.delete("/:id", deleteBooking);
-
-/**
- * @swagger
- * /api/bookings/{id}/status:
- *   post:
- *     summary: Update booking status
- *     description: Updates the status of a booking to approved/rejected
- *     responses:
- *       200:
- *         description: Booking status updated successfully
- */
-router.post("/:id/status", updateBookingStatus);
-
-/**
- * @swagger
- * /api/bookings/check-availability:
- *   post:
- *     summary: Check room availability
- *     description: Verifies if a room is available for a given time slot
- *     responses:
- *       200:
- *         description: Room is available
- *       409:
- *         description: Room is not available
- */
-router.post("/check-availability", checkRoomAvailability);
+router.delete("/:id", verifyAuth, deleteBooking);  // Endpoint for deleting a booking
 
 export default router;
