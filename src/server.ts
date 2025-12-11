@@ -15,6 +15,7 @@ import roofRoutes from "./routes/roof";
 import roomsRoutes from "./routes/rooms";
 import userRoutes from "./routes/users";
 import gamesRoutes from "./routes/games";
+import profilePicture from "./routes/profilePicture";
 
 const app = express();
 app.set('strict routing', false);
@@ -74,6 +75,7 @@ app.use("/branches", branchesRoutes);
 app.use("/notification", notificationRoutes);
 app.use("/userRoutes", userRoutes);
 app.use("/api/games", gamesRoutes);
+app.use("/profilePicture",profilePicture);
 
 // === Server Listen ===
 if (require.main === module) {
