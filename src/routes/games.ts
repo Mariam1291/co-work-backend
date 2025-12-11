@@ -1,3 +1,4 @@
+// src/routes/games.routes.ts
 import { Router } from "express";
 import { getAllGames, getGameById, createGame } from "../controllers/gamecontroller";
 
@@ -26,7 +27,7 @@ const router = Router();
  *                   description:
  *                     type: string
  */
-router.get("/all", getAllGames); // Route to get all games
+router.get("/all", getAllGames); 
 
 /**
  * @swagger
@@ -47,7 +48,7 @@ router.get("/all", getAllGames); // Route to get all games
  *       404:
  *         description: Game not found
  */
-router.get("/:id", getGameById); // Route to get a game by ID
+router.get("/:id", getGameById); 
 
 /**
  * @swagger
@@ -88,6 +89,6 @@ router.get("/:id", getGameById); // Route to get a game by ID
  *                 id:
  *                   type: string
  */
-router.post("/", createGame); // Route to create a new game
+router.post("/", createGame); 
 
 export default router;

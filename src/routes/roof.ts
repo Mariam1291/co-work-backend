@@ -1,4 +1,4 @@
-// src/routes/roof.routes.ts
+// src/routes/roofRoutes.ts
 import { Router } from "express";
 import { getAllRoof, getRoofById, getRoofByBranch } from "../controllers/roofController";
 
@@ -22,31 +22,24 @@ const router = Router();
  *                 properties:
  *                   id:
  *                     type: string
- *                     description: The ID of the roof.
  *                   name:
  *                     type: string
- *                     description: Name of the roof.
  *                   description:
  *                     type: string
- *                     description: Description of the roof.
  *                   is_active:
  *                     type: boolean
- *                     description: If the roof is active or not.
  *                   num_of_chair:
  *                     type: number
- *                     description: Number of chairs in the roof.
  *                   price_per_hour:
  *                     type: number
- *                     description: The price per hour for using the roof.
  *                   images:
  *                     type: array
  *                     items:
  *                       type: string
- *                       description: Image URLs for the roof.
  *       500:
  *         description: Internal server error
  */
-router.get("/", getAllRoof); // Route for fetching all roofs
+router.get("/", getAllRoof); 
 
 /**
  * @swagger
@@ -90,7 +83,7 @@ router.get("/", getAllRoof); // Route for fetching all roofs
  *       500:
  *         description: Internal server error
  */
-router.get("/:roofId", getRoofById); // Route for fetching a roof by ID
+router.get("/:roofId", getRoofById); 
 
 /**
  * @swagger
@@ -136,6 +129,6 @@ router.get("/:roofId", getRoofById); // Route for fetching a roof by ID
  *       500:
  *         description: Internal server error
  */
-router.get("/branch/:branchId", getRoofByBranch); // Route for fetching roofs by branch ID
+router.get("/branch/:branchId", getRoofByBranch);
 
 export default router;

@@ -6,7 +6,7 @@ import cloudinary from "../config/cloudinary";
 // جلب كل الألعاب
 export const getAllGames = async (req: Request, res: Response) => {
   try {
-    const gamesSnapshot = await db.collection("games").get(); // استرجاع الألعاب من Firestore
+    const gamesSnapshot = await db.collection("games").get();
     const games = gamesSnapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -23,7 +23,7 @@ export const getAllGames = async (req: Request, res: Response) => {
       };
     });
 
-    res.json(games);  // إرسال البيانات إلى الـ Frontend
+    res.json(games);  
   } catch (error) {
     console.error("❌ Error fetching all games:", error);
     res.status(500).json({ message: "حدث خطأ في جلب الألعاب", error: error.message });
@@ -54,7 +54,7 @@ export const getGameById = async (req: Request, res: Response) => {
       isActive: data.is_active ?? data.isActive ?? true,
     };
 
-    res.json(game);  // إرسال البيانات الخاصة باللعبة إلى الـ Frontend
+    res.json(game);  
   } catch (error) {
     console.error(`❌ Error fetching game ${id}:`, error);
     res.status(500).json({ message: "حدث خطأ في جلب اللعبة", error: error.message });
@@ -79,8 +79,8 @@ export const createGame = async (req: Request, res: Response) => {
       descriptionAr,
       descriptionEn,
       image: {
-        img1: uploadedImages[0],  // أول صورة
-        img2: uploadedImages[1],  // ثاني صورة
+        img1: uploadedImages[0],  
+        img2: uploadedImages[1],  
       },
       is_active: true,
     };

@@ -1,57 +1,43 @@
 import { Router } from "express";
-import cloudinary from "../config/cloudinary";  // استيراد Cloudinary
-import { db } from "../config/firebase";       // استيراد Firebase
-import { verifyAuth } from "../middlewares/verifyAuth"; // تأكيد التوثيق
-import multer from "multer"; // استيراد multer
-
-// تعريف نوع النتيجة من Cloudinary
-interface UploadApiResponse {
-  secure_url: string;
-  // يمكنك إضافة خصائص أخرى هنا إذا لزم الأمر
-}
+import { createUser } from "../controllers/usersController";  // تأكد من المسار الصحيح
 
 const router = Router();
 
-// إعداد multer لحفظ الملفات في ذاكرة السيرفر
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-// رفع صورة الملف الشخصي
-router.post("/upload-profile-picture", verifyAuth, upload.single('file'), async (req, res) => {
-  try {
-    const { userId } = req.body; // يجب أن يكون userId من بيانات المستخدم
-    const file = req.file; // الوصول إلى الملف الذي تم رفعه
-
-    if (!file) {
-      return res.status(400).json({ message: "يجب إرسال صورة الملف الشخصي" });
-    }
-
-    // رفع الصورة إلى Cloudinary باستخدام upload_stream مع buffer
-    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { resource_type: "auto" },
-        (error, result) => {
-          if (error) reject(error);
-          resolve(result as UploadApiResponse);  // تحديد نوع النتيجة هنا
-        }
-      );
-
-      stream.end(file.buffer); // تمرير Buffer هنا
-    });
-
-    // تحديث صورة الملف الشخصي في Firestore
-    await db.collection("users").doc(userId).update({
-      profilePicture: result.secure_url,
-    });
-
-    res.status(200).json({
-      message: "تم رفع صورة الملف الشخصي بنجاح",
-      profilePicture: result.secure_url,
-    });
-  } catch (error) {
-    console.error("Error uploading profile picture:", error);
-    res.status(500).json({ message: "حدث خطأ في رفع صورة الملف الشخصي" });
-  }
-});
+/**
+ * @swagger
+ * /users/create:
+ *   post:
+ *     summary: Create a new user
+ *     description: Adds or updates a user in the Firestore database.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               user_id:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *               name-ar:
+ *                 type: string
+ *               name-en:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               user_type:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User successfully added or updated
+ *       400:
+ *         description: Missing required fields (email or user_id)
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/create", createUser);  // مسار إنشاء المستخدم
 
 export default router;

@@ -142,4 +142,4 @@ router.get("/:eventId", getEventById); // Route to get a single event by ID
  */
 router.get("/branch/:branchId", getEventsByBranch); // Route to get events by branch ID
 
-export default router; // Export routes
+export default router;

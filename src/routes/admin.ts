@@ -1,16 +1,8 @@
-// src/routes/admin.routes.ts
+// src/routes/adminroutes.ts
 import { Router } from 'express';
-import { setAdmin, getPendingBookings, approveBooking, rejectBooking } from '../controllers/admincontroller';  // التأكد من الاستيراد الصحيح
-import { verifyAuth } from "../middlewares/verifyAuth";
-import { isAdmin } from "../middlewares/isAdmin";
+import { setAdmin, getPendingBookings, approveBooking, rejectBooking } from '../controllers/admincontroller';
 
 const router = Router();
-/**
- * @swagger
- * tags:
- *   name: Admin
- *   description: Admin management endpoints
- */
 
 /**
  * @swagger
@@ -19,8 +11,6 @@ const router = Router();
  *     summary: Set a user as admin
  *     description: Grants admin privileges to a user.
  *     tags: [Admin]
- *     security:
- *       - bearerAuth: []  # أضفنا التوثيق هنا
  *     requestBody:
  *       required: true
  *       content:
@@ -50,7 +40,7 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/set-admin", verifyAuth, isAdmin, setAdmin);
+router.post("/set-admin", setAdmin);
 
 /**
  * @swagger
@@ -59,8 +49,6 @@ router.post("/set-admin", verifyAuth, isAdmin, setAdmin);
  *     summary: Get pending bookings
  *     description: Retrieve all bookings that are pending approval.
  *     tags: [Admin]
- *     security:
- *       - bearerAuth: [] 
  *     responses:
  *       200:
  *         description: List of pending bookings
@@ -104,8 +92,6 @@ router.get("/pending-bookings", getPendingBookings);
  *     summary: Approve a booking
  *     description: Approve a pending booking and set it to confirmed.
  *     tags: [Admin]
- *     security:
- *       - bearerAuth: [] 
  *     parameters:
  *       - in: path
  *         name: id
@@ -128,8 +114,6 @@ router.post("/booking/:id/approve", approveBooking);
  *     summary: Reject a booking
  *     description: Reject a booking with a reason.
  *     tags: [Admin]
- *     security:
- *       - bearerAuth: [] 
  *     parameters:
  *       - in: path
  *         name: id
@@ -151,4 +135,4 @@ router.post("/booking/:id/approve", approveBooking);
  */
 router.post("/booking/:id/reject", rejectBooking);
 
-export default router; // تأكد من تصديره هكذا
+export default router;

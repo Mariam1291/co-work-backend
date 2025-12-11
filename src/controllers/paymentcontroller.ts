@@ -1,3 +1,4 @@
+// src/controllers/paymentController.ts
 import { Request, Response } from "express";
 import Backendless from "backendless";
 
@@ -8,7 +9,6 @@ const PaymentProofs = Backendless.Data.of("payment_proofs");
 export const uploadPaymentProof = async (req: Request, res: Response) => {
   const { user_id, booking_ids, method, payer_phone, amount, screenshot_url } = req.body || {};
 
-  // التحقق من وجود البيانات المطلوبة
   if (!user_id || !Array.isArray(booking_ids) || booking_ids.length === 0 ||
       !method || !payer_phone || !amount || !screenshot_url) {
     return res.status(400).json({
@@ -31,7 +31,6 @@ export const uploadPaymentProof = async (req: Request, res: Response) => {
       reviewed_at: null
     };
 
-    // حفظ إثبات الدفع في Backendless
     await PaymentProofs.save(proof);
 
     res.status(200).json({

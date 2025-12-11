@@ -1,5 +1,6 @@
+// src/routes/paymentRoutes.ts
 import { Router } from "express";
-import { uploadPaymentProof } from "../controllers/paymentcontroller";  // تأكد من استيراد الكنترولر بشكل صحيح
+import { uploadPaymentProof } from "../controllers/paymentcontroller";
 
 const router = Router();
 
@@ -74,6 +75,6 @@ const router = Router();
  *                   type: string
  *                   example: "خطأ في السيرفر الداخلي"
  */
-router.post("/upload-proof", uploadPaymentProof);  // مسار لرفع إثبات الدفع
+router.post("/upload-proof", uploadPaymentProof);
 
-export default router;  // تصدير المسارات
+export default router;

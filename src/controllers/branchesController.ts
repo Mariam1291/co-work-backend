@@ -3,14 +3,12 @@ import admin from "../config/firebase";
 
 const db = admin.firestore();
 
-// جلب كل الفروع
-// GET branches
 export const getAllBranches = async (req: Request, res: Response) => {
   try {
     const branchesSnap = await db.collection("branches").get();
     const branches = branchesSnap.docs.map((doc) => ({
       id: doc.id,
-      branchName: doc.data().name || "No Name",  // تأكد من استخدام الحقل الصحيح
+      branchName: doc.data().name || "No Name",
     }));
     res.status(200).json(branches);
   } catch (error) {
@@ -19,7 +17,7 @@ export const getAllBranches = async (req: Request, res: Response) => {
   }
 };
 
-// جلب فرع واحد حسب الـ ID
+
 export const getBranchById = async (req: Request, res: Response) => {
   try {
     const branchId = req.params.id;

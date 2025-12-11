@@ -1,5 +1,6 @@
+// src/routes/branchesRoutes.ts
 import { Router } from "express";
-import { getBranches, getBranchById } from "../controllers/branchesController";
+import { getAllBranches, getBranchById } from "../controllers/branchesController";
 
 const router = Router();
 
@@ -22,42 +23,12 @@ const router = Router();
  *                 properties:
  *                   id:
  *                     type: string
- *                   nameAr:
- *                     type: string
- *                   nameEn:
- *                     type: string
- *                   addressAr:
- *                     type: string
- *                   addressEn:
- *                     type: string
- *                   cityAr:
- *                     type: string
- *                   cityEn:
- *                     type: string
- *                   games:
- *                     type: array
- *                     items:
- *                       type: string
- *                   images:
- *                     type: array
- *                     items:
- *                       type: string
- *                   isActive:
- *                     type: boolean
- *                   roof:
- *                     type: array
- *                     items:
- *                       type: string
- *                   rooms:
- *                     type: array
- *                     items:
- *                       type: string
- *                   phoneNumber:
+ *                   branchName:
  *                     type: string
  *       500:
  *         description: Internal server error
  */
-router.get("/", getBranches); // Route to get all branches
+router.get("/", getAllBranches); // Route to get all branches
 
 /**
  * @swagger
@@ -121,4 +92,4 @@ router.get("/", getBranches); // Route to get all branches
  */
 router.get("/:id", getBranchById); // Route to get a branch by ID
 
-export default router; // تصدير المسارات
+export default router; // Export routes

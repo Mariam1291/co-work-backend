@@ -1,6 +1,7 @@
+// src/routes/bookingroutes.ts
 import { Router } from "express";
 import { createBooking, deleteBooking } from "../controllers/bookingController";
-import { verifyAuth } from "../middlewares/verifyAuth";  // التأكد من المسار الصحيح
+import { verifyAuth } from "../middlewares/verifyAuth";
 
 const router = Router();
 
@@ -64,7 +65,7 @@ const router = Router();
  *       500:
  *         description: Internal Server Error
  */
-router.post("/create", verifyAuth, createBooking);  // مسار إنشاء الحجز
+router.post("/create", verifyAuth, createBooking);  // Endpoint for creating a booking
 
 /**
  * @swagger
@@ -94,6 +95,6 @@ router.post("/create", verifyAuth, createBooking);  // مسار إنشاء ال�
  *       500:
  *         description: Internal Server Error
  */
-router.delete("/:id", verifyAuth, deleteBooking);  // مسار حذف الحجز
+router.delete("/:id", verifyAuth, deleteBooking);  // Endpoint for deleting a booking
 
 export default router;

@@ -1,144 +1,146 @@
 // src/controllers/bookingController.ts
 import { Request, Response } from "express";
 import { db } from "../config/firebase";
-import { BookingService } from "../services/bookingservice"; // تأكد من صحة خدمة الحجز
-import { firebaseAdmin as admin } from "../config/firebase";  // تأكد من استيراد admin بشكل صحيح
-import { AuthenticatedRequest } from "../middlewares/verifyAuth";  // استيراد AuthenticatedRequest
-import { sendNotification } from "../services/notificationService"; // استيراد دالة sendNotification
+import { BookingService } from "../services/bookingservice";
+import { firebaseAdmin as admin } from "../config/firebase";
+import { AuthenticatedRequest } from "../middlewares/verifyAuth";
+import { sendNotification } from "../services/notificationService";
 
-// تحويل الوقت إلى تنسيق 24 ساعة
+// Function to convert 12-hour time format to 24-hour format
 function convertTo24HourFormat(time12: string): string {
   const [time, modifier] = time12.split(' ');
   let [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
 
   if (modifier === 'PM' && hours !== 12) {
-    hours += 12;  // تحويل إلى مساء
+    hours += 12;  // Convert to PM
   } else if (modifier === 'AM' && hours === 12) {
-    hours = 0;    // تحويل إلى منتصف الليل
+    hours = 0;    // Convert to midnight
   }
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-// دالة لإنشاء حجز
+// Create a new booking
 export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = req.body;
 
-    // تحقق من توافر الوقت
+    // Check availability of the time slot
     const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
     if (!isAvailable) {
-      return res.status(409).json({ message: "هذا الوقت محجوز بالفعل" });
+      return res.status(409).json({ message: "This time slot is already booked" });
     }
 
-    // رفع صورة الإيداع إذا كانت موجودة
+    // Upload the deposit screenshot if available
     let screenshotUrl: string | null = null;
     if (depositScreenshot) {
       screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, req.user.uid);
     }
 
-    // تحويل الوقت إلى 24 ساعة
+    // Convert times to 24-hour format
     const startTime24 = convertTo24HourFormat(startTime);
     const endTime24 = convertTo24HourFormat(endTime);
 
-    // إضافة الحجز إلى قاعدة البيانات
+    // Add the booking to Firestore
     const bookingRef = await db.collection("bookings").add({
-      userId: req.user.uid, // يجب أن تكون `user` جزء من `AuthenticatedRequest`
+      userId: req.user.uid,
       branchId,
       roomId,
       date,
-      startTime: startTime24, // وقت البداية بتنسيق 24 ساعة
-      endTime: endTime24,     // وقت النهاية بتنسيق 24 ساعة
+      startTime: startTime24,
+      endTime: endTime24,
       totalPrice,
-      depositScreenshotUrl: screenshotUrl,  // حفظ الرابط في Firestore
+      depositScreenshotUrl: screenshotUrl,
       status: "pending",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // إرسال إشعار للمستخدم بعد إنشاء الحجز
-    await sendNotification(req.user.uid, "booking_created", "حجزك في انتظار الموافقة");
+    // Send notification to user after booking creation
+    await sendNotification(req.user.uid, "booking_created", "Your booking is awaiting admin approval");
 
     return res.status(201).json({
-      message: "تم إنشاء الحجز بنجاح، في انتظار موافقة الأدمن",
+      message: "Booking created successfully, awaiting admin approval",
       bookingId: bookingRef.id,
     });
 
   } catch (error) {
-    console.error("خطأ في إنشاء الحجز:", error);
-    return res.status(500).json({ message: error.message || "حدث خطأ غير متوقع" });
+    console.error("Error creating booking:", error);
+    return res.status(500).json({ message: error.message || "Unexpected error occurred" });
   }
 };
 
-// دالة لحذف الحجز
+// Delete a booking by ID
 export const deleteBooking = async (req: Request, res: Response) => {
   try {
     const bookingId = req.params.id;
     const bookingDoc = await db.collection("bookings").doc(bookingId).get();
 
     if (!bookingDoc.exists) {
-      return res.status(404).json({ message: "الحجز غير موجود" });
+      return res.status(404).json({ message: "Booking not found" });
     }
 
     await db.collection("bookings").doc(bookingId).delete();
 
-    // إرسال إشعار للمستخدم بعد حذف الحجز
-    const userId = bookingDoc.data()?.userId;  // جلب ID المستخدم من الحجز
+    // Send notification to user after booking deletion
+    const userId = bookingDoc.data()?.userId;
     if (userId) {
-      await sendNotification(userId, "booking_deleted", "تم حذف حجزك");
+      await sendNotification(userId, "booking_deleted", "Your booking has been deleted");
     }
 
-    res.status(200).json({ message: "تم حذف الحجز بنجاح" });
+    res.status(200).json({ message: "Booking deleted successfully" });
   } catch (error) {
-    console.error("خطأ في حذف الحجز:", error);
-    res.status(500).json({ message: "حدث خطأ أثناء حذف الحجز" });
+    console.error("Error deleting booking:", error);
+    res.status(500).json({ message: "Error occurred while deleting booking" });
   }
 };
 
-// دالة لتحديث حالة الحجز (مثال: الموافقة على الحجز)
+// Update booking status (Example: Approving booking)
 export const updateBookingStatus = async (req: Request, res: Response) => {
   try {
     const bookingId = req.params.id;
-    const { status } = req.body;  // يجب إرسال الحالة (approved, rejected, etc.)
+    const { status } = req.body;  // The status (approved, rejected, etc.)
 
     const bookingDoc = await db.collection("bookings").doc(bookingId).get();
 
     if (!bookingDoc.exists) {
-      return res.status(404).json({ message: "الحجز غير موجود" });
+      return res.status(404).json({ message: "Booking not found" });
     }
 
-    // تحديث حالة الحجز في Firestore
+    // Update booking status in Firestore
     await db.collection("bookings").doc(bookingId).update({ status });
 
-    // إرسال إشعار للمستخدم بعد تغيير حالة الحجز
-    const userId = bookingDoc.data()?.userId;  // جلب ID المستخدم من الحجز
+    // Send notification to user after updating booking status
+    const userId = bookingDoc.data()?.userId;
     if (userId) {
-      await sendNotification(userId, "booking_status_updated", `تم تحديث حالة حجزك إلى ${status}`);
+      await sendNotification(userId, "booking_status_updated", `Your booking status has been updated to ${status}`);
     }
 
-    res.status(200).json({ message: "تم تحديث حالة الحجز بنجاح" });
+    res.status(200).json({ message: "Booking status updated successfully" });
   } catch (error) {
-    console.error("خطأ في تحديث حالة الحجز:", error);
-    res.status(500).json({ message: "حدث خطأ أثناء تحديث حالة الحجز" });
+    console.error("Error updating booking status:", error);
+    res.status(500).json({ message: "Error occurred while updating booking status" });
   }
 };
+
+// Check room availability
 export const checkRoomAvailability = async (req: Request, res: Response) => {
   try {
     const { roomId, date, startTime, endTime } = req.body;
 
-    // تحويل الوقت إلى 24 ساعة
+    // Convert times to 24-hour format
     const startTime24 = convertTo24HourFormat(startTime);
     const endTime24 = convertTo24HourFormat(endTime);
 
-    // تحقق من التوافر
+    // Check availability
     const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
     if (isAvailable) {
-      return res.status(200).json({ message: "الغرفة متاحة", isAvailable: true });
+      return res.status(200).json({ message: "Room is available", isAvailable: true });
     } else {
-      return res.status(409).json({ message: "الغرفة غير متاحة في هذا الوقت", isAvailable: false });
+      return res.status(409).json({ message: "Room is not available at this time", isAvailable: false });
     }
 
   } catch (error) {
     console.error("Error checking room availability:", error);
-    res.status(500).json({ message: "حدث خطأ أثناء التحقق من التوافر" });
+    res.status(500).json({ message: "Error occurred while checking availability" });
   }
 };
