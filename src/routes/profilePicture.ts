@@ -6,7 +6,7 @@ import { verifyAuth } from "../middlewares/verifyAuth"; // تأكيد التوث
 import multer from "multer"; // استيراد multer
 
 interface UploadApiResponse {
-  secure_url: string;
+  secure_url: string; // رابط الصورة الآمن
 }
 
 const router = Router();
@@ -57,32 +57,34 @@ const upload = multer({ storage: storage });
  */
 router.post("/upload-profile-picture", verifyAuth, upload.single('file'), async (req, res) => {
   try {
-    const { userId } = req.body;
-    const file = req.file;
+    const { userId } = req.body; // استخراج الـ userId من الطلب
+    const file = req.file; // الوصول إلى الملف الذي تم رفعه
 
     if (!file) {
       return res.status(400).json({ message: "يجب إرسال صورة الملف الشخصي" });
     }
 
+    // رفع الصورة إلى Cloudinary
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { resource_type: "auto" },
+        { resource_type: "auto" }, // لتحديد النوع التلقائي للصورة
         (error, result) => {
           if (error) reject(error);
           resolve(result as UploadApiResponse);
         }
       );
 
-      stream.end(file.buffer); // تمرير Buffer هنا
+      stream.end(file.buffer); // تمرير الصورة المخزنة في الذاكرة (buffer)
     });
 
+    // تخزين رابط الصورة في Firestore داخل حقل `profilePicture` للمستخدم
     await db.collection("users").doc(userId).update({
-      profilePicture: result.secure_url,
+      profilePicture: result.secure_url, // حفظ الرابط الآمن للصورة
     });
 
     res.status(200).json({
       message: "تم رفع صورة الملف الشخصي بنجاح",
-      profilePicture: result.secure_url,
+      profilePicture: result.secure_url, // إرسال الرابط الآمن للصورة
     });
   } catch (error) {
     console.error("Error uploading profile picture:", error);
