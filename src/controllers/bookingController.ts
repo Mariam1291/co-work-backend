@@ -1,26 +1,13 @@
+// src/controllers/bookingController.ts
 import { Response } from "express";
 import { db } from "../config/firebase";
 import { AuthenticatedRequest } from "../middlewares/verifyAuth";
 
-/**
- * تحويل الوقت من 12-hour إلى 24-hour
- * مثال: "10 AM" → "10:00"
- * مثال: "3:30 PM" → "15:30"
- */
 function convertTo24HourFormat(time12: string): string {
   const [time, modifier] = time12.split(" ");
-
-  let hours = 0;
-  let minutes = 0;
-
-  if (time.includes(":")) {
-    const [h, m] = time.split(":");
-    hours = parseInt(h, 10);
-    minutes = parseInt(m, 10);
-  } else {
-    hours = parseInt(time, 10);
-    minutes = 0;
-  }
+  let [hours, minutes] = time.includes(":")
+    ? time.split(":").map(Number)
+    : [Number(time), 0];
 
   if (modifier === "PM" && hours !== 12) hours += 12;
   if (modifier === "AM" && hours === 12) hours = 0;
@@ -42,17 +29,17 @@ export const createBooking = async (
       startTime,
       endTime,
       totalPrice,
-      depositScreenshotUrl, // URL جاي من Cloudinary (اختياري)
+      depositScreenshotUrl, // ✅ جاي من الفرونت
     } = req.body;
 
-    // ✅ Validation
     if (
       !roomId ||
       !branchId ||
       !date ||
       !startTime ||
       !endTime ||
-      !totalPrice
+      !totalPrice ||
+      !depositScreenshotUrl
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -65,7 +52,7 @@ export const createBooking = async (
       startTime: convertTo24HourFormat(startTime),
       endTime: convertTo24HourFormat(endTime),
       totalPrice,
-      depositScreenshotUrl: depositScreenshotUrl || null,
+      depositScreenshotUrl, // ✅ URL فقط (Cloudinary)
       status: "pending",
       createdAt: new Date().toISOString(),
     };
@@ -77,7 +64,7 @@ export const createBooking = async (
       booking,
     });
   } catch (error) {
-    console.error("❌ createBooking error:", error);
+    console.error("Create booking error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
