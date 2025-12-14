@@ -1,91 +1,71 @@
-// src/routes/profilePicture.routes.ts
-
-import { Router, Request, Response } from "express";
-import multer from "multer";
+// src/routes/profilePicture.ts
+import { Router, Request, Response } from "express"; // استيراد Response
 import cloudinary from "../config/cloudinary";
 import { db } from "../config/firebase";
 import { verifyAuth } from "../middlewares/verifyAuth";
+import multer from "multer";
+
+// ملاحظة: افترض أن لديك ملف types/express.d.ts يحتوي على التعريف التالي:
+/*
+declare namespace Express {
+  export interface Request {
+    user?: {
+      uid: string;
+      email?: string;
+    };
+  }
+}
+*/
+// إذا كان لديك هذا التعريف، فلن تحتاج إلى AuthRequest بعد الآن.
+// سأقوم بإزالة AuthRequest لتبسيط الكود والاعتماد على التعريف العام.
 
 interface UploadApiResponse {
   secure_url: string;
 }
 
 const router = Router();
-
-/**
- * Multer configuration
- * Store file in memory (buffer)
- */
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ storage: storage });
 
-/**
- * POST /profilePicture/upload-profile-picture
- * Upload user profile picture
- */
-router.post(
-  "/upload-profile-picture",
-  verifyAuth,
-  upload.single("file"),
-  async (req: any, res: Response) => {
-    try {
-      // userId always comes from Firebase token (NOT from body)
-      const userId = req.user?.uid;
-      const file = req.file;
+// تم حذف AuthRequest والاعتماد على التعريف العام في express.d.ts
+router.post("/upload-profile-picture", verifyAuth, upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    // التعديل: استخراج uid من كائن الطلب الذي يضيفه verifyAuth
+    const userId = req.user?.uid; // تم التغيير من req.user?.id إلى req.user?.uid
 
-      if (!userId) {
-        return res.status(401).json({
-          message: "Unauthorized user",
-        });
-      }
+    if (!userId) {
+      return res.status(401).json({ message: "المستخدم غير موثق أو التوكن غير صالح" });
+    }
 
-      if (!file) {
-        return res.status(400).json({
-          message: "Profile picture file is required",
-        });
-      }
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ message: "يجب إرسال صورة الملف الشخصي" });
+    }
 
-      // Upload image to Cloudinary
-      const uploadResult = await new Promise<UploadApiResponse>(
-        (resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              resource_type: "image",
-              folder: "profile_pictures",
-            },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve(result as UploadApiResponse);
-            }
-          );
-
-          stream.end(file.buffer);
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: "auto" },
+        (error, result) => {
+          if (error) reject(error);
+          resolve(result as UploadApiResponse);
         }
       );
+      stream.end(file.buffer);
+    });
 
-      // Save image URL in Firestore (merge to avoid missing doc error)
-      await db
-        .collection("users")
-        .doc(userId)
-        .set(
-          {
-            profilePicture: uploadResult.secure_url,
-            updatedAt: new Date(),
-          },
-          { merge: true }
-        );
+    // استخدام userId (الذي هو الآن uid) لتحديث المستند
+    await db.collection("users").doc(userId).update({
+      profilePicture: result.secure_url,
+    });
 
-      return res.status(200).json({
-        success: true,
-        profilePicture: uploadResult.secure_url,
-      });
-    } catch (error) {
-      console.error("UPLOAD PROFILE PICTURE ERROR:", error);
-      return res.status(500).json({
-        message: "Failed to upload profile picture",
-      });
-    }
+    res.status(200).json({
+      message: "تم رفع صورة الملف الشخصي بنجاح",
+      profilePicture: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    res.status(500).json({ message: "حدث خطأ في رفع صورة الملف الشخصي" });
   }
-);
+});
 
 export default router;
