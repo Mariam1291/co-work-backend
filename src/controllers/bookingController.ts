@@ -32,10 +32,12 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
     }
 
     // Upload the deposit screenshot if provided
-    let screenshotUrl: string | null = null;
-    if (depositScreenshot) {
-      screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, req.user.uid);
-    }
+    
+    const { depositScreenshotUrl } = req.body;
+      let screenshotUrl: string | null = null;
+      if (depositScreenshotUrl) {
+        screenshotUrl = depositScreenshotUrl;
+      }
 
     // Convert times to 24-hour format
     const startTime24 = convertTo24HourFormat(startTime);
