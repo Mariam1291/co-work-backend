@@ -1,8 +1,12 @@
-// src/controllers/bookingController.ts
 import { Response } from "express";
 import { db } from "../config/firebase";
 import { AuthenticatedRequest } from "../middlewares/verifyAuth";
 
+/**
+ * تحويل الوقت من 12-hour إلى 24-hour
+ * مثال: "10 AM" → "10:00"
+ * مثال: "3:30 PM" → "15:30"
+ */
 function convertTo24HourFormat(time12: string): string {
   const [time, modifier] = time12.split(" ");
 
@@ -10,9 +14,9 @@ function convertTo24HourFormat(time12: string): string {
   let minutes = 0;
 
   if (time.includes(":")) {
-    const parts = time.split(":");
-    hours = parseInt(parts[0], 10);
-    minutes = parseInt(parts[1], 10);
+    const [h, m] = time.split(":");
+    hours = parseInt(h, 10);
+    minutes = parseInt(m, 10);
   } else {
     hours = parseInt(time, 10);
     minutes = 0;
@@ -31,20 +35,37 @@ export const createBooking = async (
   res: Response
 ) => {
   try {
-    const { roomId, branchId, date, startTime, endTime, totalPrice } = req.body;
+    const {
+      roomId,
+      branchId,
+      date,
+      startTime,
+      endTime,
+      totalPrice,
+      depositScreenshotUrl, // URL جاي من Cloudinary (اختياري)
+    } = req.body;
 
-    if (!roomId || !branchId || !date || !startTime || !endTime) {
-      return res.status(400).json({ message: "Missing fields" });
+    // ✅ Validation
+    if (
+      !roomId ||
+      !branchId ||
+      !date ||
+      !startTime ||
+      !endTime ||
+      !totalPrice
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     const booking = {
-      userId: req.user!.uid,
+      userId: req.user.uid,
       roomId,
       branchId,
       date,
       startTime: convertTo24HourFormat(startTime),
       endTime: convertTo24HourFormat(endTime),
       totalPrice,
+      depositScreenshotUrl: depositScreenshotUrl || null,
       status: "pending",
       createdAt: new Date().toISOString(),
     };
@@ -55,8 +76,8 @@ export const createBooking = async (
       bookingId: ref.id,
       booking,
     });
-  } catch (e: any) {
-    console.error(e);
+  } catch (error) {
+    console.error("❌ createBooking error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
