@@ -1,72 +1,62 @@
+// src/controllers/bookingController.ts
 import { Response } from "express";
-import { db, firebaseAdmin as admin } from "../config/firebase";
-import { BookingService } from "../services/bookingservice"; // اسم موحد
+import { db } from "../config/firebase";
 import { AuthenticatedRequest } from "../middlewares/verifyAuth";
-import { sendNotification } from "../services/notificationService";
 
-// دالة مساعدة لتحويل الوقت من نظام 12 ساعة إلى 24 ساعة
 function convertTo24HourFormat(time12: string): string {
-  const [time, modifier] = time12.split(' ');
-  let [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
+  const [time, modifier] = time12.split(" ");
 
-  if (modifier.toUpperCase() === 'PM' && hours !== 12) {
-    hours += 12;
-  } else if (modifier.toUpperCase() === 'AM' && hours === 12) {
-    hours = 0; // منتصف الليل
+  let hours = 0;
+  let minutes = 0;
+
+  if (time.includes(":")) {
+    const parts = time.split(":");
+    hours = parseInt(parts[0], 10);
+    minutes = parseInt(parts[1], 10);
+  } else {
+    hours = parseInt(time, 10);
+    minutes = 0;
   }
 
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
+export const createBooking = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   try {
-    // 1. استخراج البيانات من جسم الطلب
-    const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = req.body;
-    const userId = req.user?.uid; // استخراج userId من التوكن
+    const { roomId, branchId, date, startTime, endTime, totalPrice } = req.body;
 
-    // 2. التحقق من وجود البيانات الأساسية
-    if (!userId || !roomId || !date || !startTime || !endTime || !totalPrice || !depositScreenshot) {
-      return res.status(400).json({ message: "Missing required fields." });
+    if (!roomId || !branchId || !date || !startTime || !endTime) {
+      return res.status(400).json({ message: "Missing fields" });
     }
 
-    // 3. تحويل الأوقات إلى تنسيق 24 ساعة للمقارنة والتخزين
-    const startTime24 = convertTo24HourFormat(startTime);
-    const endTime24 = convertTo24HourFormat(endTime);
-
-    // 4. التحقق من أن الوقت متاح
-    const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime24, endTime24);
-    if (!isAvailable) {
-      return res.status(409).json({ message: "This time slot is already booked." });
-    }
-
-    // 5. رفع صورة إثبات الدفع
-    const screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, userId);
-
-    // 6. إضافة الحجز إلى قاعدة البيانات (Firestore)
-    const bookingRef = await db.collection("bookings").add({
-      userId: userId,
-      branchId,
+    const booking = {
+      userId: req.user!.uid,
       roomId,
+      branchId,
       date,
-      startTime: startTime24, // تخزين بتنسيق 24 ساعة
-      endTime: endTime24,     // تخزين بتنسيق 24 ساعة
+      startTime: convertTo24HourFormat(startTime),
+      endTime: convertTo24HourFormat(endTime),
       totalPrice,
-      depositScreenshotUrl: screenshotUrl, // رابط الصورة بعد الرفع
-      status: "pending", // الحالة الأولية للحجز
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    };
+
+    const ref = await db.collection("bookings").add(booking);
+
+    return res.status(201).json({
+      bookingId: ref.id,
+      booking,
     });
-
-    // 7. (اختياري) إرسال إشعار للمستخدم
-    // await sendNotification(userId, "booking_created", "Your booking is awaiting admin approval.");
-
-    // 8. إرسال استجابة ناجحة
-    res.status(201).json({
-      message: "Booking created successfully, awaiting admin approval.",
-      bookingId: bookingRef.id,
-    });
-
-  } catch (error: any) {
-    console.error("Error creating booking:", error);
-    res.status(500).json({ message: error.message || "An unexpected error occurred." });
+  } catch (e: any) {
+    console.error(e);
+    return res.status(500).json({ message: "Server error" });
   }
 };

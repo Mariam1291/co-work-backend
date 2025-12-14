@@ -1,3 +1,4 @@
+// src/middlewares/verifyAuth.ts
 import { Request, Response, NextFunction } from "express";
 import { firebaseAdmin as admin } from "../config/firebase";
 
@@ -5,7 +6,6 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     uid: string;
     email?: string | null;
-    isAdmin: boolean;
   };
 }
 
@@ -16,29 +16,20 @@ export const verifyAuth = async (
 ) => {
   const authHeader = req.headers.authorization;
 
-  // ✅ شرط صحيح
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "غير مصرح - لا يوجد توكن",
-    });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const token = authHeader.replace("Bearer ", "");
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-
+    const decoded = await admin.auth().verifyIdToken(token);
     req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email || null,
-      isAdmin: Boolean(decodedToken.admin),
+      uid: decoded.uid,
+      email: decoded.email || null,
     };
-
     next();
-  } catch (error) {
-    console.error("خطأ في التحقق من التوكن:", error);
-    return res.status(401).json({
-      message: "توكن غير صالح أو منتهي الصلاحية",
-    });
+  } catch (e) {
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
