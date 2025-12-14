@@ -65,7 +65,8 @@ const router = Router();
  *       500:
  *         description: Internal Server Error
  */
-router.post("/create", verifyAuth, createBooking);
+router.post("/create", verifyAuth, createBooking);  // Endpoint for creating a booking
+
 /**
  * @swagger
  * /api/bookings/{id}:

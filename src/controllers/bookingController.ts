@@ -1,81 +1,70 @@
-// src/controllers/bookingController.ts
-import { Response } from "express";
-import { db, firebaseAdmin as admin } from "../config/firebase";
+// / src/controllers/bookingController.ts
+import { Request, Response } from "express";
+import { db } from "../config/firebase";
+import { BookingService } from "../services/bookingservice";
+import { firebaseAdmin as admin } from "../config/firebase";
 import { AuthenticatedRequest } from "../middlewares/verifyAuth";
 import { sendNotification } from "../services/notificationService";
 
-// تحويل 12h → 24h
+// Convert 12-hour time to 24-hour time
 function convertTo24HourFormat(time12: string): string {
   const [time, modifier] = time12.split(' ');
-
-  let hours: number;
-  let minutes: number;
-
-  if (time.includes(':')) {
-    const parts = time.split(':');
-    hours = parseInt(parts[0], 10);
-    minutes = parseInt(parts[1], 10);
-  } else {
-    hours = parseInt(time, 10);
-    minutes = 0; // ✅ لو مفيش دقائق
-  }
+  let [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
 
   if (modifier === 'PM' && hours !== 12) {
-    hours += 12;
+    hours += 12;  // Convert PM times
   } else if (modifier === 'AM' && hours === 12) {
-    hours = 0;
+    hours = 0;    // Convert midnight
   }
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
+
+// Create booking
 export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const {
-      roomId,
-      branchId,
-      date,
-      startTime,
-      endTime,
-      totalPrice,
-      depositScreenshotUrl,
-    } = req.body;
+    const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = req.body;
 
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+    // Check if the time slot is available
+    const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
+    if (!isAvailable) {
+      return res.status(409).json({ message: "This time slot is already booked" });
     }
 
-    if (!roomId || !branchId || !date || !startTime || !endTime || !totalPrice) {
-      return res.status(400).json({ message: "Missing required fields" });
+    // Upload the deposit screenshot if provided
+    let screenshotUrl: string | null = null;
+    if (depositScreenshot) {
+      screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, req.user.uid);
     }
 
-    const start24 = convertTo24HourFormat(startTime);
-    const end24 = convertTo24HourFormat(endTime);
+    // Convert times to 24-hour format
+    const startTime24 = convertTo24HourFormat(startTime);
+    const endTime24 = convertTo24HourFormat(endTime);
 
+    // Add the booking to Firestore
     const bookingRef = await db.collection("bookings").add({
       userId: req.user.uid,
-      roomId,
       branchId,
+      roomId,
       date,
-      startTime: start24,
-      endTime: end24,
+      startTime: startTime24, 
+      endTime: endTime24,     
       totalPrice,
-      depositScreenshotUrl: depositScreenshotUrl ?? null,
+      depositScreenshotUrl: screenshotUrl,
       status: "pending",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    await sendNotification(
-      req.user.uid,
-      "booking_created",
-      "Your booking is awaiting admin approval"
-    );
+    // Send a notification to the user
+    await sendNotification(req.user.uid, "booking_created", "Your booking is awaiting admin approval");
 
-    return res.status(201).json({
-      message: "Booking created successfully",
+    res.status(201).json({
+      message: "Booking created successfully, awaiting admin approval",
       bookingId: bookingRef.id,
     });
-  } catch (error: any) {
-    console.error("Create booking error:", error);
-    return res.status(500).json({ message: error.message });
+
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    return res.status(500).json({ message: error.message || "Unexpected error occurred" });
   }
 };
