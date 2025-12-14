@@ -6,32 +6,32 @@ import { firebaseAdmin as admin } from "../config/firebase";
 import { AuthenticatedRequest } from "../middlewares/verifyAuth";
 import { sendNotification } from "../services/notificationService";
 
-// Function to convert 12-hour time format to 24-hour format
+// Convert 12-hour time to 24-hour time
 function convertTo24HourFormat(time12: string): string {
   const [time, modifier] = time12.split(' ');
   let [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
 
   if (modifier === 'PM' && hours !== 12) {
-    hours += 12;  // Convert to PM
+    hours += 12;  // Convert PM times
   } else if (modifier === 'AM' && hours === 12) {
-    hours = 0;    // Convert to midnight
+    hours = 0;    // Convert midnight
   }
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-// Create a new booking
+// Create booking
 export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { roomId, branchId, date, startTime, endTime, totalPrice, depositScreenshot } = req.body;
 
-    // Check availability of the time slot
+    // Check if the time slot is available
     const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
     if (!isAvailable) {
       return res.status(409).json({ message: "This time slot is already booked" });
     }
 
-    // Upload the deposit screenshot if available
+    // Upload the deposit screenshot if provided
     let screenshotUrl: string | null = null;
     if (depositScreenshot) {
       screenshotUrl = await BookingService.uploadDepositScreenshot(depositScreenshot, req.user.uid);
@@ -47,18 +47,18 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
       branchId,
       roomId,
       date,
-      startTime: startTime24,
-      endTime: endTime24,
+      startTime: startTime24, 
+      endTime: endTime24,     
       totalPrice,
       depositScreenshotUrl: screenshotUrl,
       status: "pending",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Send notification to user after booking creation
+    // Send a notification to the user
     await sendNotification(req.user.uid, "booking_created", "Your booking is awaiting admin approval");
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "Booking created successfully, awaiting admin approval",
       bookingId: bookingRef.id,
     });
@@ -66,81 +66,5 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
   } catch (error) {
     console.error("Error creating booking:", error);
     return res.status(500).json({ message: error.message || "Unexpected error occurred" });
-  }
-};
-
-// Delete a booking by ID
-export const deleteBooking = async (req: Request, res: Response) => {
-  try {
-    const bookingId = req.params.id;
-    const bookingDoc = await db.collection("bookings").doc(bookingId).get();
-
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    await db.collection("bookings").doc(bookingId).delete();
-
-    // Send notification to user after booking deletion
-    const userId = bookingDoc.data()?.userId;
-    if (userId) {
-      await sendNotification(userId, "booking_deleted", "Your booking has been deleted");
-    }
-
-    res.status(200).json({ message: "Booking deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting booking:", error);
-    res.status(500).json({ message: "Error occurred while deleting booking" });
-  }
-};
-
-// Update booking status (Example: Approving booking)
-export const updateBookingStatus = async (req: Request, res: Response) => {
-  try {
-    const bookingId = req.params.id;
-    const { status } = req.body;  // The status (approved, rejected, etc.)
-
-    const bookingDoc = await db.collection("bookings").doc(bookingId).get();
-
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    // Update booking status in Firestore
-    await db.collection("bookings").doc(bookingId).update({ status });
-
-    // Send notification to user after updating booking status
-    const userId = bookingDoc.data()?.userId;
-    if (userId) {
-      await sendNotification(userId, "booking_status_updated", `Your booking status has been updated to ${status}`);
-    }
-
-    res.status(200).json({ message: "Booking status updated successfully" });
-  } catch (error) {
-    console.error("Error updating booking status:", error);
-    res.status(500).json({ message: "Error occurred while updating booking status" });
-  }
-};
-
-// Check room availability
-export const checkRoomAvailability = async (req: Request, res: Response) => {
-  try {
-    const { roomId, date, startTime, endTime } = req.body;
-
-    // Convert times to 24-hour format
-    const startTime24 = convertTo24HourFormat(startTime);
-    const endTime24 = convertTo24HourFormat(endTime);
-
-    // Check availability
-    const isAvailable = await BookingService.isTimeSlotAvailable(roomId, date, startTime, endTime);
-    if (isAvailable) {
-      return res.status(200).json({ message: "Room is available", isAvailable: true });
-    } else {
-      return res.status(409).json({ message: "Room is not available at this time", isAvailable: false });
-    }
-
-  } catch (error) {
-    console.error("Error checking room availability:", error);
-    res.status(500).json({ message: "Error occurred while checking availability" });
   }
 };

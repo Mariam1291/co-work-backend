@@ -1,6 +1,6 @@
 // src/routes/bookingroutes.ts
 import { Router } from "express";
-import { createBooking, deleteBooking } from "../controllers/bookingController";
+import { createBooking } from "../controllers/bookingController";
 import { verifyAuth } from "../middlewares/verifyAuth";
 
 const router = Router();
@@ -95,6 +95,5 @@ router.post("/create", verifyAuth, createBooking);  // Endpoint for creating a b
  *       500:
  *         description: Internal Server Error
  */
-router.delete("/:id", verifyAuth, deleteBooking);  // Endpoint for deleting a booking
 
 export default router;
