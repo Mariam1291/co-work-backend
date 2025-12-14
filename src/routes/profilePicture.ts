@@ -1,95 +1,91 @@
 // src/routes/profilePicture.routes.ts
-import { Router } from "express";
-import cloudinary from "../config/cloudinary";  // استيراد Cloudinary
-import { db } from "../config/firebase";       // استيراد Firebase
-import { verifyAuth } from "../middlewares/verifyAuth"; // تأكيد التوثيق
-import multer from "multer"; // استيراد multer
+
+import { Router, Request, Response } from "express";
+import multer from "multer";
+import cloudinary from "../config/cloudinary";
+import { db } from "../config/firebase";
+import { verifyAuth } from "../middlewares/verifyAuth";
 
 interface UploadApiResponse {
-  secure_url: string; // رابط الصورة الآمن
+  secure_url: string;
 }
 
 const router = Router();
 
-// إعداد multer لحفظ الملفات في ذاكرة السيرفر
+/**
+ * Multer configuration
+ * Store file in memory (buffer)
+ */
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 /**
- * @swagger
- * /upload-profile-picture:
- *   post:
- *     summary: Upload a profile picture
- *     description: Uploads a user's profile picture and updates it in the database.
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               userId:
- *                 type: string
- *                 description: User ID for which the profile picture is being uploaded
- *               file:
- *                 type: string
- *                 format: binary
- *                 description: The image file to be uploaded
- *     responses:
- *       200:
- *         description: Profile picture uploaded successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 profilePicture:
- *                   type: string
- *                   description: The URL of the uploaded profile picture
- *       400:
- *         description: Missing file or userId
- *       500:
- *         description: Internal Server Error
+ * POST /profilePicture/upload-profile-picture
+ * Upload user profile picture
  */
-router.post("/upload-profile-picture", verifyAuth, upload.single('file'), async (req, res) => {
-  try {
-    const { userId } = req.body; // استخراج الـ userId من الطلب
-    const file = req.file; // الوصول إلى الملف الذي تم رفعه
+router.post(
+  "/upload-profile-picture",
+  verifyAuth,
+  upload.single("file"),
+  async (req: any, res: Response) => {
+    try {
+      // userId always comes from Firebase token (NOT from body)
+      const userId = req.user?.uid;
+      const file = req.file;
 
-    if (!file) {
-      return res.status(400).json({ message: "يجب إرسال صورة الملف الشخصي" });
-    }
+      if (!userId) {
+        return res.status(401).json({
+          message: "Unauthorized user",
+        });
+      }
 
-    // رفع الصورة إلى Cloudinary
-    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { resource_type: "auto" }, // لتحديد النوع التلقائي للصورة
-        (error, result) => {
-          if (error) reject(error);
-          resolve(result as UploadApiResponse);
+      if (!file) {
+        return res.status(400).json({
+          message: "Profile picture file is required",
+        });
+      }
+
+      // Upload image to Cloudinary
+      const uploadResult = await new Promise<UploadApiResponse>(
+        (resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              resource_type: "image",
+              folder: "profile_pictures",
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result as UploadApiResponse);
+            }
+          );
+
+          stream.end(file.buffer);
         }
       );
 
-      stream.end(file.buffer); // تمرير الصورة المخزنة في الذاكرة (buffer)
-    });
+      // Save image URL in Firestore (merge to avoid missing doc error)
+      await db
+        .collection("users")
+        .doc(userId)
+        .set(
+          {
+            profilePicture: uploadResult.secure_url,
+            updatedAt: new Date(),
+          },
+          { merge: true }
+        );
 
-    // تخزين رابط الصورة في Firestore داخل حقل `profilePicture` للمستخدم
-    await db.collection("users").doc(userId).update({
-      profilePicture: result.secure_url, // حفظ الرابط الآمن للصورة
-    });
-
-    res.status(200).json({
-      message: "تم رفع صورة الملف الشخصي بنجاح",
-      profilePicture: result.secure_url, // إرسال الرابط الآمن للصورة
-    });
-  } catch (error) {
-    console.error("Error uploading profile picture:", error);
-    res.status(500).json({ message: "حدث خطأ في رفع صورة الملف الشخصي" });
+      return res.status(200).json({
+        success: true,
+        profilePicture: uploadResult.secure_url,
+      });
+    } catch (error) {
+      console.error("UPLOAD PROFILE PICTURE ERROR:", error);
+      return res.status(500).json({
+        message: "Failed to upload profile picture",
+      });
+    }
   }
-});
+);
 
 export default router;
